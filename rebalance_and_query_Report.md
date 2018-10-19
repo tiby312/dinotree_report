@@ -39,7 +39,7 @@ The below chart shows as influencing the spiral_grow effects the number of bot i
 # Rebalancing vs Querying
 ![chart](./graphs/colfind_rebal_vs_query_num_bots.png)
 
-![chart](./graphs/colfind_rebal_vs_query_spiral.png)
+![chart](./graphs/colfind_rebal_vs_query_theory_spiral.png)
 
 
 # Level Comparison
