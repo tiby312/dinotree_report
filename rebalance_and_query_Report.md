@@ -37,7 +37,9 @@ The below chart shows as influencing the spiral_grow effects the number of bot i
 
 
 # Rebalancing vs Querying
+![chart](./graphs/colfind_rebal_vs_query_num_bots.png)
 
+![chart](./graphs/colfind_rebal_vs_query_spiral.png)
 
 
 # Level Comparison
@@ -50,30 +52,22 @@ The below chart shows as influencing the spiral_grow effects the number of bot i
 
 
 
-# Comparison of different other parameters
+# Comparison of Tree Height
 
 
-So lets look at how other variables we influcence performance? Height of the tree, the moment at which we fallback on sequential, primitive types?
+![chart](./graphs/colfind_height_heuristic.png)
+![chart](./graphs/colfind_height_heuristic_3d.png)
+![chart](./graphs/colfind_optimal_height_vs_heuristic_height.png)
+![chart](./graphs/colfind_heuristic_bench_vs_optimal_bench.png)
 
 
+# Comparison of Parallel Height
 
+![chart](./graphs/parallel_height_heuristic.png)
 
-
-
-
-
-
-
-
-
-
-
-blablabls
-
+# Comparison of primitive types
 
 ![chart](./graphs/colfind_float_vs_integer.png)
 
 
-blablabla
 
-![chart](./graphs/colfind_height_heuristic.png)
