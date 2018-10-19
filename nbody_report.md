@@ -1,0 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
+![chart](./graphs/nbody_theory.png)
+
+![chart](./graphs/nbody_bench.png)
