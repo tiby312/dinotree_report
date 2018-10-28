@@ -28,7 +28,7 @@ The below chart shows as influencing the spiral_grow effects the number of bot i
 # Comparison against other Algorithms
 
 
-The below chart compares different different algorithms both in terms of comparisons and benches. 
+The below chart compares different different algorithms both in terms of comparisons and benches. The naive algorithm is clearly the slowest, with sweep and prune next followed by dinotree. What is interesting is that the real world bench times matches closely the theoretical number of comparisons. The lines are more smooth (and deterministic) than the benches since on my laptop has other things to do besides run this program. The jumps that you see in the theortical dinotree line are the points at which the trees height grows by one. It is a complete binary tree so a slight increase in the height by 1 causes a doubling of nodes so it is a drastic change. As the number of bots increases its inevitable that sometimes the tree will be too tall or too short. 
 
 ![chart](./graphs/colfind_theory.png)
 
@@ -47,12 +47,22 @@ Another interesting observation is that these graphs show that sweep and prune h
 
 The below charts show the load balance between the construction and querying on the dinotree.
 
+* The cost of rebalancing does not change with the density of the objects
+* The cost of querying does change with the density.
+* If the bosts are spread out enough, the cost of querying decreases enough to cost less than the cost of rebalancing.
+* The cost of querying is reduced more by parallelizing than the cost of rebalancing.
+
+![chart](./graphs/colfind_rebal_vs_query_theory_spiral.png)
 ![chart](./graphs/colfind_rebal_vs_query_num_bots_grow_of_0.2.png)
 ![chart](./graphs/colfind_rebal_vs_query_num_bots_grow_of_2.png)
-![chart](./graphs/colfind_rebal_vs_query_theory_spiral.png)
 
 
 # Level Comparison
+
+* The cost of rebalancing the first level is the most erratic.
+* The load goes from the top levels to the bottom levels as the bots spread out more.
+* 
+
 ![chart](./graphs/level_analysis_theory_rebal.png)
 ![chart](./graphs/level_analysis_theory_query.png)
 
