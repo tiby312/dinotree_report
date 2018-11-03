@@ -4,28 +4,9 @@
 # Testing
 
 
-## Testing Correctness
-
-Compare against naive
-
-## Testing Memory layout
-
-
-## Testing 
-
-
-#
-It's important that if we write a test over n, we dont not inadvertatly influence other variables.
-As n grows, if we keep adding bots to the same enclosed space, then they will overlap more.
-What we want to test is what happens as n grows, and density stays roughly the same.
-I tried to come up with a formula to calculate the dimensions needed for given desntiy and number of bots,
-with a random distribution, but couldnt come up with it.
-Instead, I used a simple Archimedean spiral. It grows from the center, adding bots as it goes. This allows us to grow the size of the problem without effecting the density/distribution.
-
-
 # Testing correctness
 
-Simply using rust has a big impact on testing. Because of its heavy use of static typing, many bugs are caught at compile time. This translates to less testing as there are fewer possible paths that the produced program can take. Also the fact that the api is generic over the underlying number type used is useful. This means that we can test the system using integers and we can expect it to work for floats. It is easier to test with integers since we can more easily construct specific scenarios where one number is one value more or less than another.
+Simply using rust has a big impact on testing. Because of its heavy use of static typing, many bugs are caught at compile time. This translates to less testing as there are fewer possible paths that the produced program can take. Also the fact that the api is generic over the underlying number type used is useful. This means that we can test the system using integers and we can expect it to work for floats. It is easier to test with integers since we can more easily construct specific scenarios where one number is one value more or less than another. So in this way we can expose corner cases.
 
 A good test is a test that tests with good certainty that a large portion of code is working properly.
 Maintaining tests comes at the cost of anchoring down the design of the production code in addition to having to be maintained themselves. As a result, making good abstractions between your crates and modules that have very simple and well defined apis is very important. Then you can have a few simple tests to fully excersise an api and verify large amounts of code.

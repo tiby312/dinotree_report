@@ -6,7 +6,8 @@ The goal of this dinotree crate is to provide efficient broadphase collision que
 
 # Test Setup
 
-Before we can measure and compare performance of this algorithm, we have to come up with a good way to test it. We often want to see how performance degrades as the size of the problem increases, but we also do not want to influence any other variables. In this way a spiral distribution of the bots is ideal. It allows us to grow the size of the problem without effecting the density of the bots. It also fills out the entire 2d space. If all the bots were dstributed along only one dimension then that would also skew our results. For example, sweep and prune will perform very well if all the bots are spaced out along the axis we are sweeping.
+Before we can measure and compare performance of this algorithm, we have to come up with a good way to test it. We often want to see how performance degrades as the size of the problem increases, but we also do not want to influence any other variables. In this way a a simple Archimedean spiral distribution of the bots is ideal. It allows us to grow the size of the problem without effecting the density of the bots. It also fills out the entire 2d space. If all the bots were dstributed along only one dimension then that would also skew our results. For example, sweep and prune will perform very well if all the bots are spaced out along the axis we are sweeping.
+
 
 The spiral distribution takes 3 inputs: 
 n: the number of bots
@@ -65,7 +66,7 @@ The below charts show the load balance between the different levels of the tree.
 Some observations:
 * The cost of rebalancing the first level is the most erratic.
 * The load goes from the top levels to the bottom levels as the bots spread out more.
-* The load on the first few levels is not high unless the bots are clumped up.
+* The load on the first few levels is not high unless the bots are clumped up. Its acting like a sponge. The levels down the tree you go, the more even it gets.
 
 ![chart](./graphs/level_analysis_theory_rebal.png)
 ![chart](./graphs/level_analysis_theory_query.png)
@@ -111,14 +112,3 @@ The below chart shows performance using different primitive types for the aabbs.
 
 ![chart](./graphs/colfind_float_vs_integer.png)
 
-
-
-# Temporal Locality
-
-
-
-# Rigid Bodies
-
-If you want to use this tree for rigid bodies you have to overcome an obvious problem. You cannot move the bounding boxes once the tree it constructed. So while you are querying the tree to find bots that collide, you cannot move them then and there. An option is to insert loose bounding boxes and allow the bots to be moved within the loose bounding boxes. And then if the move need to be moved so much that they have to be moved out of the loose bounding boxes, re-construct the tree and query again until all the bots have finished moving, or you have done a set number of physics iterations, at which point you have some soft-body collision resolution fallback.
-
-Ironically, even though to have a rigid body system you would need to have looser bounding boxes, performance of the system overall would probably improve. This is because rigid body systems enforce a level of planarity. In soft body, it is possible for literally every bot to be on touching each other (like a complete graph) causing an enourmous slow down. A rigid body physics system would not allow this state to ever happen.

@@ -1,10 +1,9 @@
-The main point is that no arithmatic is done. Use must supply this.
 
 
-## Continuous Collision detection
-TODO
 
-## Dynamic Allocation
+
+
+# Dynamic Allocation
 
 Sure dynamic allocation is "slow", but that mean you should avoid it. You should use it as a tool to speed up a program. It has a cost, but the idea is that with that allocated memory you can get more performance gains.
 
@@ -13,7 +12,7 @@ The problem is that everybody has to buy into the system for it to work. Anybody
 Writing apis that don't do dynamic allocation is tough and can be cumbursome., since you probably have to have the user give you a slice of a certain size. On the other hand this let's the user know exactly how much memory your crate needs.
 
 
-
+# Parallalization
 
 Parallalization is done using rayon. The rust slice provided split_at_mut() and rayon's join() are two extremely powerful constructs. Seeing and understanding the api and implementation of split_at_mut() is what convinced me that rust was the future.
 At a certain point while going down the tree, we switch to a sequential version as recommended by rayon's usage guidelines when used in recursive divide and conquer problems. The depth at which point we switch to sequential should not be static. It should change along with the size of the problem. TODO explain this more.
@@ -38,6 +37,13 @@ is that many of these floating point operations and computing the same thing ove
 the aabb for a bot might need to be checks a bunch of times. Thats a lot of extra floating point operations. So I thin having the computed aabb in memory is better. 
 The other downside is that you lose generality. All the aabb's must be the same size.
 
+
+
+# Rigid Bodies
+
+If you want to use this tree for rigid bodies you have to overcome an obvious problem. You cannot move the bounding boxes once the tree it constructed. So while you are querying the tree to find bots that collide, you cannot move them then and there. An option is to insert loose bounding boxes and allow the bots to be moved within the loose bounding boxes. And then if the move need to be moved so much that they have to be moved out of the loose bounding boxes, re-construct the tree and query again until all the bots have finished moving, or you have done a set number of physics iterations, at which point you have some soft-body collision resolution fallback.
+
+Ironically, even though to have a rigid body system you would need to have looser bounding boxes, performance of the system overall would probably improve. This is because rigid body systems enforce a level of planarity. In soft body, it is possible for literally every bot to be on touching each other (like a complete graph) causing an enourmous slow down. A rigid body physics system would not allow this state to ever happen.
 
 
 
@@ -67,6 +73,10 @@ Another strategy to exploit temporal locality is by inserting looser bounding bo
 So in short, this system doesnt take advantage of temporal locality, but the user can still take advantage of it by inserting loose bounding boxes and then querying less frequently to amortize the cost. I didnt explore this since I need to construct the tree every iteration anyway in my android demo, because I wanted the feedback of the user moving his finger around to be imeddiate. So to find all the bots touching the finger i need the tree to be up to date every single iteration. This is because I have no way of know where the user is going to put his finger down. I cant bound it by velocity or acceleration or anything. If I were to bound the touches "velocity", it would feel more slugish i think. It would also delay the user putting a new touch down for one iteration possibly.
 
 
+# Continuous Collision detection
+
+In order to use dinotree for continuous collision detection (suitable for very fast objects, for example), the aabbs that you insert into it must be big enough to contain the position of a bot before and after the time step. This way, upon aabb collisions, you can do fine grained contiuous collision detection and resolution.
+
 
 # Extensions and Improvements
 
@@ -81,12 +91,3 @@ Another possible "improvement" would be to store positions and radius instead of
 That saves one extra float, but it is less versatile. Also fixing the radius of the bots would be a
 huge performance improvement. Every bot would only need to store a position then.
 
-
-
-# Use of Unsafe
-
-moving objects that dont implement copy.
-The multirect example. 
-split_at_mut()
-
-# think about it like a sponge. the lower you go into the tree, the more stable the calculates get 

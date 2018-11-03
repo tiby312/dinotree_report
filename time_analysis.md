@@ -44,7 +44,7 @@ dim_x=sqrt((n choose 2)* bot_width^4 /E[L])
 
 # Space and Time Complexity
 
-I dont what the theoretical average time compleity of this algorithm would be. The performance depends so wildly on the distribution of the position and sizes of the bots that are fed into it. And in more usecases, there would be certain patterns to the input data. For example, in most cases, I would hope that the bots are mostly not intersecting, (because presumably the user is using this system to keep the bots apart). And another presumption might be that size of the bounding boxes would tend to be small relative to the world in which all the bots live. 
+I dont know what the theoretical average time compleity of this algorithm would be. The performance depends so wildly on the distribution of the position and sizes of the bots that are fed into it. And in more usecases, there would be certain patterns to the input data. For example, in most cases, I would hope that the bots are mostly not intersecting, (because presumably the user is using this system to keep the bots apart). And another presumption might be that size of the bounding boxes would tend to be small relative to the world in which all the bots live. 
 
 In the average case, if you thought of all the bots as nodes, and then added edges to the nodes whose bots intersected, you'd hope that your graph was planar. This might be another way of figuring out the time complexity. The number of edges of a planar graph is bounded from above by 3*v-6. This is much smaller than the naive v*v edges of a complete graph.
 
