@@ -20,6 +20,8 @@ We can increase the spiral_grow to decrease the number of bots intersecting.
 
 The below chart shows how influencing the spiral_grow effects the number of bot itersections. This shows that we can influence the spiral grow to see how the performance of the tree degrades. We could influcence how many bots are colliding with changing the separation, but the relationship to the grow rate and the number of intersection pairs makes a nice smooth downward graph.
 
+It is not entirely smooth, but it is smooth enough that we can use this function to change the load on the dinotree without having to sample multiple times.
+
 ![chart](./graphs/spiral_data.png)
 
 
@@ -77,22 +79,37 @@ Some observations:
 # Comparison of Tree Height
 
 The below charts show the performance of the tree when manually selecting a height other than the default one chosen.
+You can see that the theory is a downward curve, but the benching is more of a bowl. Theory would tell us to have a big enough height such that every leaf node had only one bot in it. But in the real world, this has a lot of overhead with recursive calls and memory. Instead the benching suggested a smaller height where the leaf nodes has a few bots in them.
 
 ![chart](./graphs/colfind_height_heuristic.png)
+
+The below chart also shows a slight upward climb for big tree heights.
+
 ![chart](./graphs/colfind_height_heuristic_3d.png)
+
+
+The below chart compare the empirically best height against the height that our heuristic tree height function produces. 
+
 ![chart](./graphs/colfind_optimal_height_vs_heuristic_height.png)
+
+The below chart shows the bench times of the optimal height versus the heuristic height.
+
 ![chart](./graphs/colfind_heuristic_bench_vs_optimal_bench.png)
 
 
+
 # Comparison of Parallel Height
+
+The below chart shows the performance of the dinotree for different levels at which to switch to sequential.
+Obviously if you choose to switch to sequential straight away, you have sequential tree performnace.
 
 ![chart](./graphs/parallel_height_heuristic.png)
 
 # Comparison of primitive types
 
+The below chart shows performance using different primitive types for the aabbs. Notice that once parallelism is brought in, the differences between the types is not as big. It is also interesting of how fast sequential the integer run is compared to the other sequential primitive types.
+
 ![chart](./graphs/colfind_float_vs_integer.png)
-
-
 
 
 
