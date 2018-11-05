@@ -34,6 +34,11 @@ So how can we layout the nodes in memory to achieve this? Well, putting them in 
 
 If we were inserting references into the tree, then the original order of the bots is preserved during construction/destruction of the tree. However, we are inserting the actual bots to remove this layer of indirection. So when are done using the tree, we want to return the bots to the user is the same order that they were put in. This way the user can rely on indicies for other algorithms to uniquely identify a bot. To do this, during tree construction, we also build up a Vec of offsets to be used to return the bots to their original position. We keep this as a seperate data structure as it will only be used on destruction of the tree. If we were to put the offset data into the tree itself, it would be wasted space and would hurt the memory locality of the tree query algorithms. We only need to use these offsets once, during destruction. It shouldnt be the case that all querying algorithms that might be performed on the tree suffer performance for this.
 
+
+### Leaves
+
+The leaves do not have dividers. This means that if we use the same type for both nonleaves, and leaves we have wasted space in our leaf objects. This wouldnt be so bad if it wernt for two things. First, this is a complete binary tree, so literally half the nodes are leaves. Second, before the tree is laid out in dfs in order order in memory, this means that the distance between the root node and its children is effected by the empty space all of the leaves between them of which a quarter of the leaves will be. Our goal is to make this as compact in memory as possible, so to avoid this, we simply have two different types. 
+
 ### Memory complexity during construction
 
 Below is an example showing space usage for 5 aabb objects:
@@ -45,28 +50,21 @@ r=size of one axis aligned bounding box.
 
 
 
-xxxxx ->user provides bots
+1) xxxxx ->user provides bots
 
-xxxxx iririririr -> the inner tree of (index,aabb) elements is created and sorted. 
+2) xxxxx iririririr -> the inner tree of (index,aabb) elements is created and sorted. 
 
-xxxxx iririririr xrxrxrxrxr -> the inner tree is used to create the dinotree. 
+3) xxxxx iririririr xrxrxrxrxr -> the inner tree is used to create the dinotree. 
 
-xxxxx xrxrxrxrxr iririririr iiiii ->the indicies of the bots in generated (so that we know the indicies of where to move the bots back to)
+4) xxxxx xrxrxrxrxr iririririr iiiii ->the indicies of the bots in generated (so that we know the indicies of where to move the bots back to)
 
-xxxxx xrxrxrxrxr iiiii ->remove inner tree. Now the tree is setup and ready to be used. The user can call apply() to apply changes to the right bots (by using the index list stored).
+5) xxxxx xrxrxrxrxr iiiii ->remove inner tree. Now the tree is setup and ready to be used. The user can call apply() to apply changes to the right bots (by using the index list stored).
 
-xxxxx -> dinotree is destroyed leaving just the original slice.
+6) xxxxx -> dinotree is destroyed leaving just the original slice.
 
-
-
-So its a fair about of memory space needed, but at least it grows linear.
 ```
-So there is a step in the above example where quite a bit of memory is needed. Space usage i 2*n*x+2*n*r+2*n*i. Where x,r,i are the space of the object, aabb, and index respectively. The size of x is user defined, so it could be smaller than r, but not likely. Likely x>r>>i.  So we can bound the previous equation by 2*n*x+2*n*x+2*n*x=6*n*x=O(n) linear memory complexity. 
+So there is a step in the above example where quite a bit of memory is needed (step 4). Space usage at this step is 2*n*x+2*n*r+2*n*i. The size of x is user defined, so it could be smaller than r, but not likely. Likely x>r>i.  So we can bound the previous equation by 2*n*x+2*n*x+2*n*x=6xn. So it is linear space complexity, but it is a large constant. Space usage is high but this buys us an optimal memory placement of the final constructed tree to speed up the querying as much as possible.
 
-
-### Leaves
-
-The leaves do not have dividers. This means that if we use the same type for both nonleaves, and leaves we have wasted space in our leaf objects. This wouldnt be so bad if it wernt for two things. First, this is a complete binary tree, so literally half the nodes are leaves. Second, before the tree is laid out in dfs in order order in memory, this means that the distance between the root node and its children is effected by the empty space all of the leaves between them of which a quarter of the leaves will be. Our goal is to make this as compact in memory as possible, so to avoid this, we simply have two different types. 
 
 ### Knowing the axis as compile time.
 
