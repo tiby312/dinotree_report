@@ -11,7 +11,7 @@ First lets talk about the tree data structure itself before we talking about the
 Construction works as follows, Given: a list of bots.
 
 For every node we do the following:
-1. First we find the median of the remaining bots (using pattern defeating quick sort) and use its position as this nodes divider.
+1. First we find the median of the remaining bots (using pattern defeating quick select) and use its position as this nodes divider.
 2. Then we bin the bots into three bins. Those strictly to the left of the divider, those strictly to the right, and those that intersect.
 3. Then we sort the bots that intersect the divider along the opposite axis that was used to finding the median. These bots now live in this node.
 4. Now this node is fully set up. Recurse left and right with the bots that were binned left and right. This can be done in parallel.
@@ -36,13 +36,32 @@ If we were inserting references into the tree, then the original order of the bo
 
 ### Memory complexity during construction
 
-Construction involves a couple of allocations. TODO talk
-The user has a vec a bots. Then a vec of aabb's and offsets is generated from this vec of bots. This vec is then sorted and binned into a dinotree. So at this point we have the original vec of bots, and a tree of aabb's and offsets. These two vecs are then melded together into one dinotree. So we end up need memory space for 2*n+(2*n) because we need:
-1) space for all the bots
-2) space for all the aabbs and offsets (well assume the size of a bot is atleast as big as this)
-3) space for the fused together tree which is a combination of the two above.
-So thats n+n+2*n=4*n memory space.
+Below is an example showing space usage for 5 aabb objects:
+
+```text
+x=size of one user defined object (without its aabb)
+i=size of one index of an aabb object
+r=size of one axis aligned bounding box.
+
+
+
+xxxxx ->user provides bots
+
+xxxxx iririririr -> the inner tree of (index,aabb) elements is created and sorted. 
+
+xxxxx iririririr xrxrxrxrxr -> the inner tree is used to create the dinotree. 
+
+xxxxx xrxrxrxrxr iririririr iiiii ->the indicies of the bots in generated (so that we know the indicies of where to move the bots back to)
+
+xxxxx xrxrxrxrxr iiiii ->remove inner tree. Now the tree is setup and ready to be used. The user can call apply() to apply changes to the right bots (by using the index list stored).
+
+xxxxx -> dinotree is destroyed leaving just the original slice.
+
+
+
 So its a fair about of memory space needed, but at least it grows linear.
+```
+So there is a step in the above example where quite a bit of memory is needed. Space usage i 2*n*x+2*n*r+2*n*i. Where x,r,i are the space of the object, aabb, and index respectively. The size of x is user defined, so it could be smaller than r, but not likely. Likely x>r>>i.  So we can bound the previous equation by 2*n*x+2*n*x+2*n*x=6*n*x=O(n) linear memory complexity. 
 
 
 ### Leaves
