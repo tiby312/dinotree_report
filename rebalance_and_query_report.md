@@ -29,7 +29,11 @@ It is not entirely smooth, but it is smooth enough that we can use this function
 # Comparison against other Algorithms
 
 
-The below chart compares different different algorithms both in terms of comparisons and benches. The naive algorithm is clearly the slowest, with sweep and prune next followed by dinotree. What is interesting is that the real world bench times matches closely the theoretical number of comparisons. The lines are more smooth (and deterministic) than the benches since an everyday laptop has other things to do besides run this program. The jumps that you see in the theortical dinotree line are the points at which the trees height grows by one. It is a complete binary tree so a slight increase in the height by 1 causes a doubling of nodes so it is a drastic change. As the number of bots increases its inevitable that sometimes the tree will be too tall or too short. 
+The below chart compares different algorithms both in terms of comparisons and benches. The naive algorithm is clearly the slowest, with sweep and prune next followed by dinotree. What is interesting is that the real world bench times matches closely the theoretical number of comparisons. What this means is that the number of comparisisons performed is proportional to the real world performance of this algorithm. The lines are more smooth (and deterministic) than the benches since an everyday laptop has other things to do besides run this program. 
+
+The way in which the benches are graphed is also a slight lie. Only one sample is taken for each different value of n, and the samples are taken in ascending order. This means that you can see trends in the graph where the cpu throttles, for example, and see if all happen in the same area in the graph. If more samples were taken of each n, and in a random order, this would not be apparent. But in reality this isnt that big of a deal, as long as we can clearly see a trend as n increases.
+
+The jumps that you see in the theortical dinotree line are the points at which the trees height grows by one. It is a complete binary tree so a slight increase in the height by 1 causes a doubling of nodes so it is a drastic change. As the number of bots increases its inevitable that sometimes the tree will be too tall or too short. 
 
 ![chart](./graphs/colfind_theory.png)
 

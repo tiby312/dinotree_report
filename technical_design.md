@@ -1,4 +1,4 @@
-
+export RUSTFLAGS="-C no-vectorize-loops -C no-vectorize-slp -llvm-args \"-inline\"" "
 
 
 
@@ -124,4 +124,4 @@ The thing is that if you don't use dynamic allocation, and you instead reserve s
 
 # General thoughts on optimizing
 
-Optimization is a great balancing act. Indirection, locality, memory vs computation, dividng and conquer. Every algorithm has unique properties. On top of the designing the algorithm, there is a whole nother level of questions when it comes to implementing said algorithm. How to best write the code for maintainability, readabilty, performance, simplicity in the api. Concurrency is the strangest of all. The theory and practice clash together.  Making desisions of when to stabailize and write tests, or when to capitalize on some new design oportunity, it goes on. Is it better to generate out less code with more branches, or more code with less branches.  
+Optimization is a great balancing act. Indirection, locality, memory vs computation, dividng and conquer. Every algorithm has unique properties. On top of the designing the algorithm, there is a whole nother level of questions when it comes to implementing said algorithm. How to best write the code for maintainability, readabilty, performance, simplicity in the api. Concurrency is the strangest of all. The theory and practice clash together.  Making desisions of when to stabailize and write tests, or when to capitalize on some new design oportunity, it goes on. Is it better to generate out less code with more branches, or more code with less branches.  Good design is especially important since the original author is imbuned with the enthusiasm of making something new, where as other people will TODO finish.

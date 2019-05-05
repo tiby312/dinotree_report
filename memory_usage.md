@@ -19,3 +19,16 @@ xxxxx xrxrxrxrxr iiiii ->remove inner tree. Now the tree is setup and ready to b
 xxxxx -> dinotree is destroyed leaving just the original slice.
 
 
+
+
+
+#rebal
+
+
+User puts the bots into the memory space
+xxxxxxxx-------------------------
+Sort and bin
+aabbcccc-------------------------
+Move to correct place
+-----------aa==bbcccc------------
+

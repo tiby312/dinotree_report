@@ -1,4 +1,9 @@
 
+
+When rebalancing, it is much easier to do it with two seperate arrays intsead of a heterogeneous array. The heterogenous array laid out in dfs in order made up of node types and bot types would give you better memory locality as you decended the tree, but comes at much complcation with memory alignment. Also, since the size of the bots are variable based on the number type used for the bounding box, its possible that there doesnt exist a good alignment to allow the bots and nodes to be placed compactle interspersed next to each other. The result of that would be a lot of dead memory space inbetween the elements of the array.
+
+
+
 In this document, we'll go over the high level design of some of the algorithms provided by this crate.
 As a user of this crate, you don't really need to know any of these. All you need to concern yourself is the api.
 
@@ -74,11 +79,11 @@ must be chosen at compile time. It is certainly possible to create a wrapper aro
 
 ### Teapot in a Stadium problem.
 
-TODO
+Collision detection systems that rely creating a grid where every cell owns the aabb objects that live inside them arn't less flexible. You have to pick a good grid cell size. 
 
 ### Liquid.
 
-
+In liquid simulations the cost of querying dominates even more than rebalancing since as opposed to particles that always repel, liquid particles repel if close to each other, but all attract if somewhat close. This means that the aabb's will intersect more often as the system tends to have overlapping aabbs.
 
 # Algorithms overview
 
@@ -103,6 +108,9 @@ The sweep and prune algorithm is a good candidate to use since, for one thing is
 ## Performance
 
 The construction of the tree may seem expensive, but it is still less than the possible cost of this algorithm. This algorithm could dominate very easily depending on how many bots intersect. That is why the cost of sorting the bots in each node is worth it because our goal is to make this algorithm the fasted it possibly can be. The load of the rebalancing of the tree doesnt very as much as the load of this algorithm. 
+
+The cost of building the tree may be high, but many different kinds of queries can be done on it without constructing new type of data structures.
+
 
 
 # Nbody
