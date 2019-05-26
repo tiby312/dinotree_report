@@ -1,25 +1,49 @@
-## In this writeup I will go over all the major design problems that I encountered, and I will explain the decision that was made.
+## Design
 
-I've thought a lot about the best way to describe the design of this data structure, and really, the design I ended up with is the result of making a decision at important crossroads. So what better way to talk about the design than to talk about all the crossroads and the path I decided to go down.
+In this writeup I will go over all the major design problems that I encountered, and I will explain the decision that was made. I've thought a lot about the best way to describe the design of this data structure, and really, the design I ended up with is the result of making a decision at important crossroads. So what better way to talk about the design than to talk about all the crossroads and the path I decided to go down.
 
 
 ## Tree space partitioning vs grid 
 
-I wanted to make a collision system that could be used in the general case, and did not need to be fine-tuned. Grid based collision systems suffer from the teapot-in-a-stadium problem. They also degenerate more rapidly as objects get more clumped up. If, however, you have a system where you have strict rules with how evenly distributed objects will be among the entire space you're checking collisions against, then a grid system can be better. But I think these systems are few and far in between. I think in most systems, for example, its perfectly possible for all the objects to exist entirely on one half of the space being collision checked leaving the other half empty. In such a case, half of the data structure of the grid system is not being used to partition anything. A tree space partitioning system, on the other hand, would be able to exploit that.
+I wanted to make a collision system that could be used in the general case and did not need to be fine-tuned. Grid based collision systems suffer from the teapot-in-a-stadium problem. They also degenerate more rapidly as objects get more clumped up. If, however, you have a system where you have strict rules with how evenly distributed objects will be among the entire space you're checking collisions against, then I think a grid system can be better. But I think these systems are few and far in between. I think in most systems, for example, its perfectly possible for all the objects to exist entirely on one half of the space being collision checked leaving the other half empty. In such a case, half of the data structure of the grid system is not being used to partition anything. A tree space partitioning system, on the other hand, would be able to exploit that.
 
 
 ## (Sweep and Prune) vs (Kd Tree) vs (KdTree + Sweep and Prune)
 
 Sweep and prune is a simple AABB collision finding system, but it degenerates as there are more and more "false-positives" (objects that intersect on one axis, but not both). Kd Trees are great, but objects that can't be inserted into children are left in the parent node and those objects must be collision checked with everybody else naivley. The best solution is to use both. 
 
-The sweep and prune algorithm is a good candidate to use since, for one thing is uses very little memory (just a stack that can be reused as you handle decendant nodes). But the real reason why it is good is the fact that the bots are likely to be stewn across a line. Sweep and prune degenerates when the active list that it must maintain has many bots that end up not intersecting. This isnt likely to happen for the bots that belong to a node. The bots that belong to a non leaf node are guarenteed to touch the divider. If the divider partitions bots based off their x value, then the bots that belong to that node will all have x values that are roughly close together (they must intersect divider), but they y values can be vastly different (all the bots will be scattered up and down the dividing line). So when we do sweep and prune, it is important that we sweep and prune along axis that is different from the axis along which the divider is partitioning.
+The sweep and prune algorithm is a good candidate to use since it uses very little memory (just a stack that can be reused as you handle decendant nodes). But the real reason why it is good is the fact that the bots that belong to a non-leaf node in a kd tree are likely to be stewn across the divider in a line. Sweep and prune degenerates when the active list that it must maintain has many bots that end up not intersecting. This isnt likely to happen for the bots that belong to a node. The bots that belong to a non leaf node are guarenteed to touch the divider. If the divider partitions bots based off their x value, then the bots that belong to that node will all have x values that are roughly close together (they must intersect divider), but they y values can be vastly different (all the bots will be scattered up and down the dividing line). So when we do sweep and prune, it is important that we sweep and prune along axis that is different from the axis along which the divider is partitioning.
 
 
 ## KD tree vs Quad Tree
 
-The cost of building a kd tree is often overstated. People say use a quad tree for dynamic systems, and a kd tree for static systems. But in reality, the gains you get from building a kd tree, offset the added cost of building it- even in dynamic systems. In systems where you know there cannot be that many collisions maybe, but in most systems it is entirely possible for very very dense clumps. In those cases, you want all the help you can get, in which case you will want the tree that has partitioned the space the best.
+The cost of building a kd tree is high. Quad tree are easy to build so its suggested to be better for dynamic systems, and a kd tree good for static systems. But in some systems, the gains you get from building a kd tree, offset the added cost of building it- even in dynamic systems. In systems where you know there cannot be that many collisions a quad-tree or a grid based system could be better, but in most systems it is entirely possible for very very dense clumps. In those cases, you want all the help you can get, in which case you will want the tree that has partitioned the space the best.
 
-KD trees are also great in a multithreaded setting. With a kd tree, you are guarenteed that for any parent, there are an equal number of objects if you recurse the left side and the right side since you specifically chose the divider to be the median. This means that both the left and right are jobs of equal side and can be handled in parallel.  With a quad tree you don't have this property since the dividers chosen were all chose statically.
+KD trees are also great in a multithreaded setting. With a kd tree, you are guarenteed that for any parent, there are an equal number of objects if you recurse the left side and the right side since you specifically chose the divider to be the median. This means that both the left and right are jobs of equal side and can be handled in parallel.  With a quad tree you don't have this property since the dividers chosen were all chosen statically.
+
+
+## Exploiting Temporal Locality vs Not.
+
+If you are simulating moving elements, it might seem slow to rebuild the tree every iteration. But from benching, most of the time querying is the cause of the slowdown. Rebuilding is always a constant load, but the load of the query can very wildly depending on how many elements are overlapping.
+
+For example, in a bench where inside of the collision call-back function I do a reasonable collision response with 80_000 bots, if there are 0.8 times (or 65_000 ) collisions or more, querying takes longer than rebuilding. For your system, it might be impossible for there to even be 0.8 * n collisions, in which case building the tree will always be the slower part. For many systems, 0.8 * n collisions can happen pretty often. For example if you were to simulate a 2d ball-pit, every ball could be touching 6 other balls (https://en.wikipedia.org/wiki/Circle_packing), and that is without soft-body physics. So in that system, there are 0.9 * n collisions. So in that case, querying is the bottle neck. With soft-body physics, the number can be every higher. up to n * n.
+
+
+Rebuilding the first level of the tree does take some time, but it is still just a fraction of the entire building algorithm in most cases, provided that it was able to partition almost all the bots into two planes. 
+
+The main reason against exploiting temporal locality is that adding any kind of "memory" to the tree where you save the positins of the dividers to use as good heuristic positions for next iterations will come at a cost of a possibly sub optimal tree layout which will hurt the query algorithm. Our goal is to make the query algorithm as fast as possible since that is what can dominate.
+
+The construction of the tree may seem expensive, but it is still less than the possible cost of this algorithm. This algorithm could dominate very easily depending on how many bots intersect. That is why the cost of sorting the bots in each node is worth it because our goal is to make this algorithm the fastest it possibly can be. The load of the rebalancing of the tree doesnt very as much as the load of this algorithm. 
+
+Additionally, we have been assuming that one we build the tree, we are just finding all the colliding pairs of the elements. In reality, there might be many different queries we want to do on the same tree. So this is another reason we want the tree to be built to make querying as fast as possible, because we don't know how many queries the user might want to do on it. In addition to finding all colliding pairs, its quite reasonable the user might want to do some k_nearest querying, some rectangle area querying, or some raycasting.
+
+
+## Tree structure data seperate from elements in memory, vs intertwined
+
+There is a certain appeal to storing the tree elements and tree data in the same piece of contiguous memory. Cache coherency is improved since there is very little change that the tree data, and the elements that belong to that node are not in the same cache block. The data structure becomes portable in memory, and can be serialized easily. But there is added complexity. Because the elements that are inserted into the tree are generic, the alignment of the objects may not match that of the tree data. This would lead to wasted padded space that must be inserted into the tree to accomodate this. Additionally, while this data structure would be faster at querying, it would be slower if the user just wants to iterate through all the elements in the tree. The cache misses doesnt happen that often since the change of a cache miss only happens on a per node basis, instead of per element. Moreover, I think the tree data structue itself is very small and has a good chance of being completely in a cache block.
+
+When rebalancing, it is much easier to do it with two seperate arrays intsead of a heterogeneous array. The heterogenous array laid out in dfs in order made up of node types and bot types would give you better memory locality as you decended the tree, but comes at much complcation with memory alignment. Also, since the size of the bots are variable based on the number type used for the bounding box, its possible that there doesnt exist a good alignment to allow the bots and nodes to be placed compactle interspersed next to each other. The result of that would be a lot of dead memory space inbetween the elements of the array.
+
 
 ## Level of indirection vs none for elements in the tree.
 
@@ -28,34 +52,12 @@ It is important to note that what we are trying to speed up is the collision fin
 If we were inserting references into the tree, then the original order of the bots is preserved during construction/destruction of the tree. However, we are inserting the actual bots to remove this layer of indirection. So when are done using the tree, we want to return the bots to the user is the same order that they were put in. This way the user can rely on indicies for other algorithms to uniquely identify a bot. To do this, during tree construction, we also build up a Vec of offsets to be used to return the bots to their original position. We keep this as a seperate data structure as it will only be used on destruction of the tree. If we were to put the offset data into the tree itself, it would be wasted space and would hurt the memory locality of the tree query algorithms. We only need to use these offsets once, during destruction. It shouldnt be the case that all querying algorithms that might be performed on the tree suffer performance for this.
 
 
-
 ## Copy vs NoCopy
 
 This is the classic tradeoff: Memory vs Computation. Because we are not using a level of indirection, we have to reordering objects to match how they 
 show up in the tree. You can reorder an array of objects in place, but it is a fairly expensive operation. You also have to do this twice (once to order them into the tree, once to order them back to the original). A less compuationally expensive way it to just use an auxilary array, but this requires twice the amount of memory. So in certain cases, you might not have the space for an auxiliary array if we are talking millions of objects.
 
 Here, I left the api flexible enough to use either option, we Copy being the suggested api.
-
-
-## Exploiting Temporal Locality vs Not.
-
-If you are simulating moving elements, it might seem slow to rebuild the tree every iteration. But from benching, most of the time querying is the cause of the slowdown. Rebuilding is always a constant load, but the load of the query can very wildly depending on how many elements are overlapping.
-
-Rebuilding the first level of the tree does take some time, but it is still just a fraction of the entire building algorithm in most cases. 
-
-The main reason against it is that adding any kind of "memory" to the tree where you save the positins of the dividers to use as good heuristic positions for next iterations will come at a cost of a possibly sub optimal tree layout which will hurt the query algorithm. Our goal is to make the query algorithm as fast as possible since that is what dominates.
-
-The construction of the tree may seem expensive, but it is still less than the possible cost of this algorithm. This algorithm could dominate very easily depending on how many bots intersect. That is why the cost of sorting the bots in each node is worth it because our goal is to make this algorithm the fasted it possibly can be. The load of the rebalancing of the tree doesnt very as much as the load of this algorithm. 
-
-The cost of building the tree may be high, but many different kinds of queries can be done on it without constructing new type of data structures.
-
-
-## Tree structure data seperate from elements in memory, vs intertwined
-
-There is a certain appeal to storing the tree elements and tree data in the same piece of contiguous memory. Cache coherency is improved since there is very little change that the tree data, and the elements that belong to that node are not in the same cache block. But there is added complexity. Because the elements that are inserted into the tree are generic, the alignment of the objects may not match that of the tree data. This would lead to wasted padded space that must be inserted into the tree to accomodate this. Additionally, while this data structure would be faster at querying, it would be slower if the user just wants to iterate through all the elements in the tree. The cache misses doesnt happen that often since the change of a cache miss only happens on a per node basis, instead of per element. Moreover, I think the tree data structue itself is very small and has a good chance of being completely in a cache block.
-
-When rebalancing, it is much easier to do it with two seperate arrays intsead of a heterogeneous array. The heterogenous array laid out in dfs in order made up of node types and bot types would give you better memory locality as you decended the tree, but comes at much complcation with memory alignment. Also, since the size of the bots are variable based on the number type used for the bounding box, its possible that there doesnt exist a good alignment to allow the bots and nodes to be placed compactle interspersed next to each other. The result of that would be a lot of dead memory space inbetween the elements of the array.
-
 
 
 
@@ -90,7 +92,7 @@ can represent any rectangle
 cons:
 more memory (4 floating point values)
 
-Note, if the size of the elements is the same then the Point+radius only takes up 2 floating point values, so that might be better in certain cases. But even in this case, I think the cost of having to do floating point calculations when comparing every bot with every other bot in the query part of the algorithm is too much.
+Note, if the size of the elements is the same then the Point+radius only takes up 2 floating point values, so that might be better in certain cases. But even in this case, I think the cost of having to do floating point calculations when comparing every bot with every other bot in the query part of the algorithm is too much. With a AABB system, absolutely no floating point calculations need to be done to find all colliding pairs.
 
 
 # Performance Themes
