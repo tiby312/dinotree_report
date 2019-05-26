@@ -17,7 +17,7 @@ The basic idea is that you use a tree up until a specific tree height, and then 
 
 ## KD tree vs Quad Tree
 
-The cost of building a kd tree is high. Quad tree are easy to build so its suggested to be better for dynamic systems, and a kd tree good for static systems. But in some systems, the gains you get from building a kd tree, offset the added cost of building it- even in dynamic systems. In systems where you know there cannot be that many collisions a quad-tree or a grid based system could be better, but in most systems it is entirely possible for very very dense clumps. In those cases, you want all the help you can get, in which case you will want the tree that has partitioned the space the best.
+The cost of building a kd tree is high. Quad trees are easy to build so its suggested to be better for dynamic systems, and a kd tree good for static systems. But in some systems, the gains you get from building a kd tree, offset the added cost of building it- even in dynamic systems. In systems where you know there cannot be that many collisions a quad-tree or a grid based system could be better, but in most systems it is entirely possible for very very dense clumps. In those cases, you want all the help you can get, in which case you will want the tree that has partitioned the space the best.
 
 KD trees are also great in a multithreaded setting. With a kd tree, you are guarenteed that for any parent, there are an equal number of objects if you recurse the left side and the right side since you specifically chose the divider to be the median. This means that both the left and right are jobs of equal side and can be handled in parallel.  With a quad tree you don't have this property since the dividers chosen were all chosen statically.
 
