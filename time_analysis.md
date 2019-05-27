@@ -84,15 +84,10 @@ Again we are assuming uniform distribution.
 
 So below algorithms are only efficient if d<<s. 
 
+So e=(n*d)/s.  and we assume d << s.
 
 
-
-
-
-
-
-
-# Rebalance Algorithm time complexity
+# DinoTree construction time complexity
 
 Lets looking at rebalancing. For each node, there are three steps that need to be done:
 binning process
@@ -134,57 +129,58 @@ level4  =  8*(n-4*e)/8+sort(e/8))
 Lets split them into two series. One for binning and one for sorting.
 
 complete binning running time = 1*n + 2*(n-1*e)/2 + 4*(n-2*e)/4 + 8*(n-4*e)/8 + .... 
+
 = n + n-1*e + n-2*e  + n-4*e + ...
+
 = (n + n + n + n + ...) - e( 1 + 2 + 4 + 8 + ..)
+
 lets assume the tree height is h.
+
 = n*h - e*(sum(2^k,0,h))
+
 = n*h - e*(1-2^h)/-1
+
 = n*h - e*(-1 + 2^h)
+
 = n*h + e-2^h 
 
 complete sorting running time = 1*sort(e) + 2*sort(e/2) + 4*sort(e/4) + 8*sort(e/8) + ...
+
 =e*log(e) + 2*(e/2)*log(e/2) + 4*(e/4)*log(e/4) + 8*(e/8)*log(e/8) + ...
+
 =e*log(e) + e*log(e/2) + e*log(e/4) + e*log(e/8) + ...
+
 =e*(log(e) + log(e/2) + log(e/4) + log(e/8) + ...)
+
 =e*(log(e) + log(e) - log(2) + log(e) - log(4) + log(e) - log(8) + ...)
+
 =e*(h*log(e) -log(2)-log(4) -log(8) - ... )
+
 =e*(h*log(e) - (log(2)+log(4)+log(8)+...)  )
+
 =e*(h*log(e) - (log(2*4*8...)     ) )
+
 =e*(h*log(e) - log(2^h))
+
 =h*e*log(e) - e*log(2^h)
 
 So complete running time is binning and sorting complete times combined
 
 (n*h + e-2^h) + (h*e*log(e) - h*e*log(2))
+
 = n*h + e + h*e*log(e) - 2^h - h*e*log(2)
 
 Notice how many terms depend on e. The hope is that e is very small to bein with. 
 The dominating term is n*h. We choose the height of the complete tree based off of the number of bots,
 so we can replace h with log(n) leaving n*log(n) for the dominating term. 
 
+So assuming e is small, we running time of creating the tree is n*log(n). 
 
 
 
-...
-
-so I think each level would take b(n)+s(e).
-The number of levels is log2(n/10);
-So in total: (bin(n)+sort(e))*log2(n/10);
-
-So we have: (bin(n)+sort((n*d)/s))*log2(n/10);
-
-binning grows linearly, but sorting (via rusts std sort) grows by n*log(n).
-
-So as far as number of steps and ignoring constants we have:
-complexity(n)=(n+n*log2(n))*log2(n); where x=n*d/s;
-n*log2(n)+n*log2(n)*log2(n)<=2*nlog2(n)*nlog2(n)==nlog2()^2
-
-So I think complexity of rebalancing is nLog2(n)^2. But in practice is d<<s, it is probably closer to nlog(n).
+# DinoTree collision pair query time complexity
 
 
-
-
-Querying on the other hand is more challening, lets give it a shot:
 Lets make some sweeping (no pun intended) assumptions. Every node has around the same number of bots,
 and we will call it e (same as rebalancing)
 
@@ -241,17 +237,11 @@ So overall we have to functions that bound complexity:
 rebalance_cost=(bin(n)+sort(e))*log2(n/bots_per_node);
 query_cost=(n/bots_per_node)(sweep_sort(e)+bi_sweep(e)*log2(n/bots_per_node))
 
-So things to notice about these functions. The bin function takes the entirety of n as input. Even though binning is fast (only have to put the bots into 3 buckets), it has to be applied to a large number of bots. By contract, the sorting function is done on on a smaller epsilon.
-
-The bijective sweep algorithm is less expensive than the sweep sort. The sweep sort algorithm has to check every body against every other in the slice that is passed to it. By contrast, the bi_sweep() algorithm checks two slices of bots only against each other. 
+The bijective sweep algorithm is less expensive than the sweep sort. The sweep sort algorithm has to check every body against every other in theslice that is passed to it. By contrast, the bi_sweep() algorithm checks two slices of bots only against each other. 
 
 
 
-
-
-
-
-
+# Space Complexity
 
 
 The space complexity, on the other hand, is much easier to figure out. 
