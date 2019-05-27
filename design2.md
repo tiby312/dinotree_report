@@ -56,8 +56,7 @@ If we were inserting references into the tree, then the original order of the bo
 This is the classic tradeoff: Memory vs Computation. Because we are not using a level of indirection, we have to reordering objects to match how they 
 show up in the tree. You can reorder an array of objects in place, but it is a fairly expensive operation. You also have to do this twice (once to order them into the tree, once to order them back to the original). A less compuationally expensive way it to just use an auxilary array, but this requires twice the amount of memory. So in certain cases, you might not have the space for an auxiliary array if we are talking millions of objects.
 
-Here, I left the api flexible enough to use either option, we Copy being the suggested api.
-
+Here, I left the api flexible enough to use either option, with Copy being the suggested api.
 
 
 ## Leaves as unique type, vs single node type.

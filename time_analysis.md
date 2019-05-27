@@ -67,7 +67,7 @@ So we have:
 where x is the possible x values.
 
 
-probability 1 bot intersects median:p(bot)=d/s
+probability a bot intersects median:p(bot)=d/s
 let random variable be whether or not bot touches x. So it either is or it isnt.
 It happens with probability d/s. It doesnt happen with probably 1-d/s.
 So E[X]=1*d/s+0*(1-d/s)=d/s.
@@ -92,7 +92,6 @@ So below algorithms are only efficient if d<<s.
 
 
 
-
 # Rebalance Algorithm time complexity
 
 Lets looking at rebalancing. For each node, there are three steps that need to be done:
@@ -102,30 +101,70 @@ recurse left,right
 
 As you go down the tree, less time is spent binning, and more time is spent sorting.
 
-at the root, binning would take N, and sorting would take epsilon (the amount intersecting the divider. The hope is that this is  asmall number).
-at the second level, binning would be (N-e1), and sorting would take 2*e2, so if we write this out:
+at the root, binning would have an input of N, and sorting would take e1 (the amount intersecting the divider. The hope is that this is  asmall number).
+at the second level, binning would have an input of (N-e1), and sorting would take 2*e2, so if we write this out:
 
 
 level1  =  1*bin(n)+sort(e)
 
-level2  =  2*(bin((n-1e)/2)+sort(e/2))
+level2  =  2*(bin((n-1*e)/2)+sort(e/2))
 
-level3  =  4*(bin((n-2e)/4)+sort(e/4)) 
+level3  =  4*(bin((n-2*e)/4)+sort(e/4)) 
 
-level4  =  8*(bin((n-4e)/8)+sort(e/8))
+level4  =  8*(bin((n-4*e)/8)+sort(e/8))
+
+The total running time is the sum of all of these.
+
+Sorting is done using rust's built in sorting, which has big(o) of log(n)*n like any sorting algoritm.
+So for the purposes of finding the O(n) we can replace sort(n) with log(n)*n.
+The binning process first finds the median at each level using pdqselect which has an average running time of O(n). 
+Once it finds the median, it then binns all the bots into three bins. This is also O(n).
+So for the purposes of finding the O(n) we can replace bin(n) with simply n.
+
+First lets just replace the binning:
+
+level1  =  1*n+sort(e)
+
+level2  =  2*(n-1*e)/2+sort(e/2))
+
+level3  =  4*(n-2*e)/4+sort(e/4)) 
+
+level4  =  8*(n-4*e)/8+sort(e/8))
+
+Lets split them into two series. One for binning and one for sorting.
+
+complete binning running time = 1*n + 2*(n-1*e)/2 + 4*(n-2*e)/4 + 8*(n-4*e)/8 + .... 
+= n + n-1*e + n-2*e  + n-4*e + ...
+= (n + n + n + n + ...) - e( 1 + 2 + 4 + 8 + ..)
+lets assume the tree height is h.
+= n*h - e*(sum(2^k,0,h))
+= n*h - e*(1-2^h)/-1
+= n*h - e*(-1 + 2^h)
+= n*h + e-2^h 
+
+complete sorting running time = 1*sort(e) + 2*sort(e/2) + 4*sort(e/4) + 8*sort(e/8) + ...
+=e*log(e) + 2*(e/2)*log(e/2) + 4*(e/4)*log(e/4) + 8*(e/8)*log(e/8) + ...
+=e*log(e) + e*log(e/2) + e*log(e/4) + e*log(e/8) + ...
+=e*(log(e) + log(e/2) + log(e/4) + log(e/8) + ...)
+=e*(log(e) + log(e) - log(2) + log(e) - log(4) + log(e) - log(8) + ...)
+=e*(h*log(e) -log(2)-log(4) -log(8) - ... )
+=e*(h*log(e) - (log(2)+log(4)+log(8)+...)  )
+=e*(h*log(e) - (log(2*4*8...)     ) )
+=e*(h*log(e) - log(2^h))
+=h*e*log(e) - e*log(2^h)
+
+So complete running time is binning and sorting complete times combined
+
+(n*h + e-2^h) + (h*e*log(e) - h*e*log(2))
+= n*h + e + h*e*log(e) - 2^h - h*e*log(2)
+
+Notice how many terms depend on e. The hope is that e is very small to bein with. 
+The dominating term is n*h. We choose the height of the complete tree based off of the number of bots,
+so we can replace h with log(n) leaving n*log(n) for the dominating term. 
 
 
 
 
-
-
-(bn-se1)+2*se2
-bn-(se1+2*se2)+4*se3
-...
-Lets make further assumption that all e's are roughly the same.
-bn+se
-bn-se+2*se=bn+se
-bn-(se+2*se)+4*se=bn-3se+4se=bn+se
 ...
 
 so I think each level would take b(n)+s(e).
