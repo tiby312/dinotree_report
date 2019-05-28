@@ -30,7 +30,7 @@ For example, in a bench where inside of the collision call-back function I do a 
 
 Rebuilding the first level of the tree does take some time, but it is still just a fraction of the entire building algorithm in most cases, provided that it was able to partition almost all the bots into two planes. 
 
-The main reason against exploiting temporal locality is that adding any kind of "memory" to the tree where you save the positins of the dividers to use as good heuristic positions for next iterations will come at a cost of a possibly sub optimal tree layout which will hurt the query algorithm. Our goal is to make the query algorithm as fast as possible since that is what can dominate.
+The main reason against exploiting temporal locality is that adding any kind of "memory" to the tree where you save the positions of the dividers to use as good heuristic positions for next iterations will come at a cost of a possibly sub optimal tree layout which will hurt the query algorithm. Our goal is to make the query algorithm as fast as possible since that is what can dominate.
 
 The construction of the tree may seem expensive, but it is still less than the possible cost of this algorithm. This algorithm could dominate very easily depending on how many bots intersect. That is why the cost of sorting the bots in each node is worth it because our goal is to make this algorithm the fastest it possibly can be. The load of the rebalancing of the tree doesnt very as much as the load of this algorithm. 
 
@@ -44,7 +44,7 @@ There is a certain appeal to storing the tree elements and tree data in the same
 When rebalancing, it is much easier to do it with two seperate arrays intsead of a heterogeneous array. The heterogenous array laid out in dfs in order made up of node types and bot types would give you better memory locality as you decended the tree, but comes at much complcation with memory alignment. Also, since the size of the bots are variable based on the number type used for the bounding box, its possible that there doesnt exist a good alignment to allow the bots and nodes to be placed compactle interspersed next to each other. The result of that would be a lot of dead memory space inbetween the elements of the array.
 
 
-## Level of indirection vs none for elements in the tree.
+## Level of indirection vs None for elements in the tree.
 
 It is important to note that what we are trying to speed up is the collision finding. This is the potentially n^2 computation. It is worth it shifting everything around in memory if it allows us to remove one level of indirection inside of the computationally expensive n^2 computation. The main benefit that comes from removing the level of indirection is cache coherency. If we just have pointers to all the objects in the tree, Then for every collision check we do against two objects, its possible that is a cache miss. This becomes a problem for large n.
 
