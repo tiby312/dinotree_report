@@ -78,7 +78,13 @@ Some observations:
 ![chart](./graphs/level_analysis_bench_rebal.png)
 ![chart](./graphs/level_analysis_bench_query.png)
 
+# Bounds checking vs no bounds checking
 
+This shows the difference between using array indexing with and without bounds checking/unsafe.
+As you can see, the no bounds checking version is faster, but it is by a negligable ammount.
+Look at the xaxis. The difference is still only slight at 500_000 bots.
+
+![chart](./graphs/checked vs unchecked binning with a grow of 1.png)
 
 
 # Comparison of Tree Height
