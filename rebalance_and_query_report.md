@@ -45,7 +45,7 @@ There are a couple of observations to make here. First, you might have noticed t
 
 Another interesting observation is that these graphs show that sweep and prune has a better worst case than the dinotree algorithm. This makes sense since in the worst case, sweep and prune willl sort all the bots, and then sweep. In the worst case for dinotree, it will first find the median, and then sort all the bots, and then sweep. So the dinotree is slower since it redundantly found the median, and then sorted everything. However, it can be easily seen that this only happens when the bots are extremely clumped up (grow<=0.003). So while sweep and prune has a better worst-cast, the worst-cast scenario is rare and the dino-tree's worst case is not much worst (median finding + sort versus just sort). 
 
-![chart](./graphs/3d_colfind_num_pairs.png)
+![chart](./graphs/theory/3d_colfind_num_pairs.png)
 
 # Rebalancing vs Querying
 
