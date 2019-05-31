@@ -81,6 +81,12 @@ Some observations:
 ![chart](./graphs/bench/level_analysis_bench_rebal.png)
 ![chart](./graphs/bench/level_analysis_bench_query.png)
 
+# Copy vs No Copy
+
+todo talk about
+
+![chart](./graphs/bench/copy_vs_no_copy1.png)
+
 # Bounds checking vs no bounds checking
 
 This shows the difference between using array indexing with and without bounds checking/unsafe.
