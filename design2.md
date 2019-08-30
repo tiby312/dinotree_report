@@ -1,3 +1,23 @@
+## TODO
+key point is that the rebalancing and query make heavy use of the aabb, the other fields are used far less. So there is an advantage to removing a layer of indirection, but only for the aabbs. For the actual objects, it is better to store them as references. They could be arbitrarily large for one thing. 
+
+
+(Rect<isize>,&mut T)
+(Rect<isize>,T),
+&mut (Rect<isize>,T)
+
+
+No point giving the user flexibility in choosing.
+
+From benching direct aabb, and indirect bot is almost always the fastest. 
+There are a few corner cases where if T is very small, and the bots are very dense, that it is slightly faster, but it is marginal.
+So don't make it general to the user.
+For this type of use, force the user with thie memory layout.
+broadphone means that there is a lot of aabb checking, and most of it is false positives.
+Sometimes bots actually touch, in which case we can afford a level of indirection since it happens relatively rarely.
+
+
+
 ## For the reader
 
 I've thought a lot about the best way to describe the design of this data structure, and really, the design I ended up with is the result of making a decision at important crossroads. So what better way to talk about the design than to talk about all the crossroads and the path I decided to go down. So in this writeup I will go over all the major design problems that I encountered, and I will explain the decision that was made.
@@ -37,6 +57,11 @@ The main reason against exploiting temporal locality is that adding any kind of 
 The construction of the tree may seem expensive, but it is still less than the possible cost of the querying. The querying could dominate very easily depending on how many bots intersect. That is why the cost of sorting the bots in each node is worth it because our goal is to make this algorithm the fastest it possibly can be. The load of the rebalancing of the tree doesnt very as much as the load of this algorithm. 
 
 Additionally, we have been assuming that once we build the tree, we are just finding all the colliding pairs of the elements. In reality, there might be many different queries we want to do on the same tree. So this is another reason we want the tree to be built to make querying as fast as possible, because we don't know how many queries the user might want to do on it. In addition to finding all colliding pairs, its quite reasonable the user might want to do some k_nearest querying, some rectangle area querying, or some raycasting.
+
+
+## Enhancement (Expoiting Temporal Locality)
+
+I would love to try the following: Instead of finding the median at every level, find an approximate median. Additionally, keep a weighted average of the medians from previous tree builds and let it degrade with time. Get an approximate median using median of medians. This would ensure worst case linear time when building one level of the tree. This would allow the rest of the algorithm to be parallelized sooner.
 
 
 ## Tree structure data seperate from elements in memory, vs intertwined
@@ -261,6 +286,10 @@ Done via divide and conquer. For every node we do the following:
 
 ## Nbody
 
+
+Here we use divide and conquer. Basically.
+
+
 The nbody algorithm works in three steps. First a new version tree is built with extra data for each node. Then the tree is traversed taking advantage of this data. Then the tree is traversed again applying the changes made to the extra data from the construction in the first step.
 
 The extra data that is stored in the tree is the sum of the masses of all the bots in that node and all the bots under it. The idea is that if two nodes are sufficiently far away from one another, they can be treated as a single body of mass.
@@ -269,7 +298,7 @@ So once the extra data is setup, for every node we do the following:
 	Gravitate all the bots with each other that belong to this node.
 	Recurse left and right gravitating all bots encountered with all the bots in this node.
 		Here once we reach nodes that are sufficiently far away, we instead gravitate the node's extra data with this node's extra data, and at this point we can stop recursing.
-	At this point it might appear we are done handling this node the problem has been reduced to two smaller ones, but we are not done yet. We additoinally have to gravitate all the bots on the left of this node with all the bots on the right of this node.
+	At this point it might appear we are done handling this node the problem has been reduced to two smaller ones, but we are not done yet. We additionally have to gravitate all the bots on the left of this node with all the bots on the right of this node.
     For all nodes encountered while recursing the left side,
     	Recurse the right side, and handle all bots with all the bots on the left node.
     	If a node is suffeciently far away, treat it as a node mass instead and we can stop recursing.
