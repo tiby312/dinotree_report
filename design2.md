@@ -1,118 +1,15 @@
-
-## Mutable vs Mutable + Read-Only api
-
-Most of the query algorithms only provide an api where they operate on a mutable reference
-to the dinotree and return mutable reference results.
-Ideally there would be sibling query functions that take a read-only dinotree
-and produce read-only reference results. 
-The main benefit would be that you could run different types of query algorithms on the tree
-simulatiously safely. 
-In rust right now, there isn't a easy way to re-use code
-between two versions of an algorithm where one uses mutable references and one uses read-only references.
-In the rust source code, you can see they do this using macros. From rust core's slice code:
-
-```
-// The shared definition of the `Iter` and `IterMut` iterators
-macro_rules! iterator {
-	...
-}
-```
-
-But I didnt want to make these already complicated query algorithms even harder to read by
-wrapping them all in macros. The simplest query algorithm, rect querying, does provide read-only versions.
-I'm hoping that eventualy you will be able to 'parameterize over mutability' so that i dont have to use macros.
-
-In any-case, there arn't many use-cases that I can think of where you'd want to read-only versions of certain 
-query algorithms. For example, finding all colliding pairs. What would the user do with only read-only references
-to all the colliding pairs? The most they could do is collect the id's of all of them in a container, which they
-would then iterate through and get mutable references. But then you might as well skip that step and mutate the
-pairs right in the query algorithm. Doing it this way also takes more advantage of the parallelism on the algorithm.
-
-Other query algorithms I can see some benefits. For example, raycasting. In raycasting the user might just want to
-draw a line to the element that is returned from the raycast, in which case the user wouldn't need a mutable reference
-to the result. So if I were to provide a read-only raycast api, and the user wanted to raycast many times, then that could
-be easily be parallelized. For now, the user must use the mutable raycast api and handle each raycast sequentially. This
-is simplier to implement (no macros), and the raycast algorithm is already very fast compared to other algrithms such
-as constructing the tree and finding colliding pairs.
-
-
-## Making HasAabb an unsafe trait vs Not
-
-Making a trait unsafe is something nobody wants to do, but in this instance it lets as make some assumptions
-that lets us do interesting things safely. The key idea is the following in the case of multirect qery:
-If two rectangle queries do not intersect, then it is guarenteed that the elements and mutually exclusive.
-This means that we can safely return mutable references to all the elements in the first rectangle,
-and all the elements in the second rectangle simultaneously. 
-For this to work the user must uphold the contract of HasAabb such that the aabb returned is always the same.
-This is hard for the user not to do since they only have read-only reference to safe, but still possible using
-RefCell or Mutex's. If the user violates this, then despite two query rectangles being mutually exclusive,
-the same bot might be in both.
-
-So at the cost of making HasAabb unsafe, we can make the MultiRect Api not unsafe.
-
-
-## Different Data Layouts
-
-
-There are three main datalayouts for each of the elements in a dinotree that are interesting:
-```
-(Rect<isize>,&mut T)
-(Rect<isize>,T),
-&mut (Rect<isize>,T)
-```
-
-Because the tree construction code is generic over the elements that are inserted (as long as they implement HasAabb),
-The user can easily try all three data layouts.
-
-#TODO add benching results here.
-
-
-From benching direct aabb, and indirect bot is almost always the fastest. 
-There are a few corner cases where if T is very small, and the bots are very dense, that it is slightly faster, but it is marginal.
-So don't make it general to the user.
-For this type of use, force the user with thie memory layout.
-broadphone means that there is a lot of aabb checking, and most of it is false positives.
-Sometimes bots actually touch, in which case we can afford a level of indirection since it happens relatively rarely.
-
-It is important to note that what we are trying to speed up is the collision finding. This is the potentially n^2 computation. It is worth it shifting everything around in memory if it allows us to remove one level of indirection inside of the computationally expensive n^2 computation. The main benefit that comes from removing the level of indirection is cache coherency. If we just have pointers to all the objects in the tree, Then for every collision check we do against two objects, its possible that is a cache miss. This becomes a problem for large n.
-
-If we were inserting references into the tree, then the original order of the bots is preserved during construction/destruction of the tree. However, we are inserting the actual bots to remove this layer of indirection. So when are done using the tree, we want to return the bots to the user is the same order that they were put in. This way the user can rely on indicies for other algorithms to uniquely identify a bot. To do this, during tree construction, we also build up a Vec of offsets to be used to return the bots to their original position. We keep this as a seperate data structure as it will only be used on destruction of the tree. If we were to put the offset data into the tree itself, it would be wasted space and would hurt the memory locality of the tree query algorithms. We only need to use these offsets once, during destruction. It shouldnt be the case that all querying algorithms that might be performed on the tree suffer performance for this.
-
-
-## Forbidding the user from violating the invariants of the tree
-
-We have an interesting problem with our tree. We want the user to be able to mutate the elements directly in the tree,
-but we also do not want to let them mutate the aabb's of each of the elements of the tree. Doing so would
-mean we'd need to re-construct the tree.
-
-So when iterating over the tree, we can't return &mut T. So to get around that, there is ProtectedBBox that wraps
-around a &mut T that implements HasAabb that also implements HasAabb. 
-
-So that makes the user unable to get a &mut T, but even if we just give the user a &mut [ProtectedBBox<T>] where is another problem. The user could swap two node's slices around. So to get around that we have ProtectedBBoxSlice that wraps
-around a &mut [ProtectedBBox<T>] and provides an interator who Item is a ProtectedBBox<T>.
-
-But there is still another problem, we can't return a &mut Node either. Because then the user could swap the entire node
-between two nodes in the tree. So to get around that we have a ProtectedNode that wraps around a &mut Node.
-
-So that's alot of work, but now the user is physically unable to violate the invariants of the tree. It is tempting
-to just let it be the user's responsibility to not violate the invariants of the tree, and that would be a fine design
-choice if it weren't for the fact that HasAabb is unsafe (See Making HasAabb an unsafe trait vs Not Section).
-
-
-
-
-
-
-
-
-
-
 ## For the reader
 
-I've thought a lot about the best way to describe the design of this data structure, and really, the design I ended up with is the result of making a decision at important crossroads. So what better way to talk about the design than to talk about all the crossroads and the path I decided to go down. So in this writeup I will go over all the major design problems that I encountered, and I will explain the decision that was made.
+Below I go over a bunch of design problems/decisions while developing this dinotree library.
 
 I've written this assuming the reader knows what a [kdtree](https://en.wikipedia.org/wiki/K-d_tree),[sweep and prune](https://en.wikipedia.org/wiki/Sweep_and_prune) ,and [quad tree](https://en.wikipedia.org/wiki/Quadtree) are. 
 
+
+## (Sweep and Prune) vs (Kd Tree) vs (KdTree + Sweep and Prune)
+
+Sweep and prune is a simple AABB collision finding system, but it degenerates as there are more and more "false-positives" (objects that intersect on one axis, but not both). Kd Trees are great, but objects that can't be inserted into children are left in the parent node and those objects must be collision checked with everybody else naivley. The tree height might also end up very large to satisfy the requirement that the leaf has only one element. A better solution is to use both. 
+
+The basic idea is that you use a tree up until a specific tree height, and then switch to sweep and prune, and then additionally use sweep and prune for elements stuck in higher up tree nodes. The sweep and prune algorithm is a good candidate to use since it uses very little memory (just a stack that can be reused as you handle decendant nodes). But the real reason why it is good is the fact that the bots that belong to a non-leaf node in a kd tree are likely to be stewn across the divider in a line. Sweep and prune degenerates when the active list that it must maintain has many bots that end up not intersecting. This isnt likely to happen for the bots that belong to a node. The bots that belong to a non leaf node are guarenteed to touch the divider. If the divider partitions bots based off their x value, then the bots that belong to that node will all have x values that are roughly close together (they must intersect divider), but they y values can be vastly different (all the bots will be scattered up and down the dividing line). So when we do sweep and prune, it is important that we sweep and prune along axis that is different from the axis along which the divider is partitioning, otherwise it will degenetate to pratically the naive algorithm.
 
 
 ## KD tree vs Quad Tree
@@ -122,12 +19,6 @@ can vary and dominate very easily in desnse/clumped up situations. The slow cons
 
 KD trees are also great in a multithreaded setting. With a kd tree, you are guarenteed that for any parent, there are an equal number of objects if you recurse the left side and the right side since you specifically chose the divider to be the median. This means that both the left and right are jobs of either side and can be handled in parallel.  With a quad tree, the load is not guarenteed to be even between the four children nodes.
 
-
-## (Sweep and Prune) vs (Kd Tree) vs (KdTree + Sweep and Prune)
-
-Sweep and prune is a simple AABB collision finding system, but it degenerates as there are more and more "false-positives" (objects that intersect on one axis, but not both). Kd Trees are great, but objects that can't be inserted into children are left in the parent node and those objects must be collision checked with everybody else naivley. The tree height might also end up very large to satisfy the requirement that the leaf has only one element. A better solution is to use both. 
-
-The basic idea is that you use a tree up until a specific tree height, and then switch to sweep and prune, and then additionally use sweep and prune for elements stuck in higher up tree nodes. The sweep and prune algorithm is a good candidate to use since it uses very little memory (just a stack that can be reused as you handle decendant nodes). But the real reason why it is good is the fact that the bots that belong to a non-leaf node in a kd tree are likely to be stewn across the divider in a line. Sweep and prune degenerates when the active list that it must maintain has many bots that end up not intersecting. This isnt likely to happen for the bots that belong to a node. The bots that belong to a non leaf node are guarenteed to touch the divider. If the divider partitions bots based off their x value, then the bots that belong to that node will all have x values that are roughly close together (they must intersect divider), but they y values can be vastly different (all the bots will be scattered up and down the dividing line). So when we do sweep and prune, it is important that we sweep and prune along axis that is different from the axis along which the divider is partitioning, otherwise it will degenetate to pratically the naive algorithm.
 
 
 ## Tree space partitioning vs grid 
@@ -172,8 +63,6 @@ This would mean that query would be slower since we are not using heuristics and
 For a while I had the design where the dividers would move as those they had mass. They would gently be pushed to which ever side had more bots. The problem with this approach is that the divider locations will mostly of the time be sub optimial. And the cost saved in rebalancing just isnt enough for the cost added to querying with a suboptimal partitioning. By always partitioning optimally, we get guarentees of the maximum number of bots in a node. Remember querying is the bottleneck, not rebalancing.
 
 
-
-
 ## Tree structure data seperate from elements in memory, vs intertwined
 
 There is a certain appeal to storing the tree elements and tree data intertwined in the same piece of contiguous memory. Cache coherency would be improved since there is very little chance that the tree data, and the elements that belong to that node are not in the same cache block. But there is added complexity. Because the elements that are inserted into the tree are generic, the alignment of the objects may not match that of the tree data object. This would lead to wasted padded space that must be inserted into the tree to accomodate this. Additionally, while this data structure could be faster at querying, it would be slower if the user just wants to iterate through all the elements in the tree. The cache misses don't happen that often since the chance of a cache miss only happens on a per node basis, instead of per element. Moreover, I think the tree data structue itself is very small and has a good chance of being completely in a cache block.
@@ -201,6 +90,111 @@ The main primitive that they use is accessing the two children nodes from a pare
 So how can we layout the nodes in memory to achieve this? Well, putting them in memory in breadth first order doesnt cut it. This achieves the exact opposite. For example, the children of the root are literally right next to it. On the other hand the children of the most left node on the 5th level only show up after you look over all the other nodes at the 5th level. It turns out in-order depth first search gives us the properties that we want. With this ordering, all the parents of leaf nodes are literally right next to them in memory. The children of the root node are potentially extremely far apart, but that is okay since there is only one of them.
 
 In reality, it doesnt really matter because all this does is reduce cache misses when handling collision between two nodes which doesnt happen as often as an object to object basis. 
+
+
+## Mutable vs Mutable + Read-Only api
+
+Most of the query algorithms only provide an api where they operate on a mutable reference
+to the dinotree and return mutable reference results.
+Ideally there would be sibling query functions that take a read-only dinotree
+and produce read-only reference results. 
+The main benefit would be that you could run different types of query algorithms on the tree
+simulatiously safely. 
+In rust right now, there isn't a easy way to re-use code
+between two versions of an algorithm where one uses mutable references and one uses read-only references.
+In the rust source code, you can see they do this using macros. From rust core's slice code:
+
+```
+// The shared definition of the `Iter` and `IterMut` iterators
+macro_rules! iterator {
+	...
+}
+```
+
+But I didnt want to make these already complicated query algorithms even harder to read by
+wrapping them all in macros. The simplest query algorithm, rect querying, does provide read-only versions.
+I'm hoping that eventualy you will be able to 'parameterize over mutability' in rust so that i dont have to use macros.
+
+In any-case, there arn't many use-cases that I can think of where you'd want read-only versions of certain 
+query algorithms. For example, finding all colliding pairs. What would the user do with only read-only references
+to all the colliding pairs? There may be some cases where the user would just want to draw or list all the colliding pairs,
+but most use-cases I can think of, you want to actually mutate the pairs in some way.
+
+Other query algorithms I can see some benefits. For example, raycasting. In raycasting the user might just want to
+draw a line to the element that is returned from the raycast, in which case the user wouldn't need a mutable reference
+to the result. So if I were to provide a read-only raycast api, and the user wanted to raycast many times, then that could
+be easily be parallelized. For now, the user must use the mutable raycast api and handle each raycast sequentially. This
+is simplier to implement (no macros), and the raycast algorithm is already very fast compared to other algrithms such
+as constructing the tree and finding colliding pairs.
+
+
+## Making HasAabb an unsafe trait vs Not
+
+Making a trait unsafe is something nobody wants to do, but in this instance it lets as make some simple assumptions
+that lets us do interesting things safely. 
+
+The key idea is the following:
+If two rectangle queries do not intersect, then it is guarenteed that the elements are mutually exclusive.
+This means that we can safely return mutable references to all the elements in the first rectangle,
+and all the elements in the second rectangle simultaneously. 
+
+For this to work the user must uphold the contract of HasAabb such that the aabb returned is always the same
+while it is inserted in the tree.
+This is hard for the user not to do since they only have read-only reference to self, but still possible using
+RefCell or Mutex. If the user violates this, then despite two query rectangles being mutually exclusive,
+the same bot might be in both. So at the cost of making HasAabb unsafe, we can make the MultiRect Api not unsafe.
+
+
+## Different Data Layouts
+
+
+There are three main datalayouts for each of the elements in a dinotree that are interesting:
+```
+(Rect<isize>,&mut T)
+(Rect<isize>,T),
+&mut (Rect<isize>,T)
+```
+
+Because the tree construction code is generic over the elements that are inserted (as long as they implement HasAabb),
+The user can easily try all three data layouts.
+
+#TODO add benching results here.
+
+
+From benching direct aabb, and indirect bot is almost always the fastest. 
+There are a few corner cases where if T is very small, and the bots are very dense, that it is slightly faster, but it is marginal.
+So don't make it general to the user.
+For this type of use, force the user with thie memory layout.
+broadphone means that there is a lot of aabb checking, and most of it is false positives.
+Sometimes bots actually touch, in which case we can afford a level of indirection since it happens relatively rarely.
+
+It is important to note that what we are trying to speed up is the collision finding. This is the potentially n^2 computation. It is worth it shifting everything around in memory if it allows us to remove one level of indirection inside of the computationally expensive n^2 computation. The main benefit that comes from removing the level of indirection is cache coherency. If we just have pointers to all the objects in the tree, Then for every collision check we do against two objects, its possible that is a cache miss. This becomes a problem for large n.
+
+If we were inserting references into the tree, then the original order of the bots is preserved during construction/destruction of the tree. However, we are inserting the actual bots to remove this layer of indirection. So when are done using the tree, we want to return the bots to the user is the same order that they were put in. This way the user can rely on indicies for other algorithms to uniquely identify a bot. To do this, during tree construction, we also build up a Vec of offsets to be used to return the bots to their original position. We keep this as a seperate data structure as it will only be used on destruction of the tree. If we were to put the offset data into the tree itself, it would be wasted space and would hurt the memory locality of the tree query algorithms. We only need to use these offsets once, during destruction. It shouldnt be the case that all querying algorithms that might be performed on the tree suffer performance for this.
+
+
+## Forbidding the user from violating the invariants of the tree
+
+We have an interesting problem with our tree. We want the user to be able to mutate the elements directly in the tree,
+but we also do not want to let them mutate the aabb's of each of the elements of the tree. Doing so would
+mean we'd need to re-construct the tree.
+
+So when iterating over the tree, we can't return &mut T. So to get around that, there is ProtectedBBox that wraps
+around a &mut T that also implements HasAabb. 
+
+So that makes the user unable to get a &mut T, but even if we just give the user a &mut [ProtectedBBox<T>] where is another problem. The user could swap two node's slices around. So to get around that we have ProtectedBBoxSlice that wraps
+around a &mut [ProtectedBBox<T>] and provides an interator who Item is a ProtectedBBox<T>.
+
+But there is still another problem, we can't return a &mut Node either. Because then the user could swap the entire node
+between two nodes in the tree. So to get around that we have a ProtectedNode that wraps around a &mut Node.
+
+So that's alot of work, but now the user is physically unable to violate the invariants of the tree and at the same time
+we do not have a level of indirection. It is tempting
+to just let it be the user's responsibility to not violate the invariants of the tree, and that would be a fine design
+choice if it weren't for the fact that HasAabb is unsafe (See Making HasAabb an unsafe trait vs Not Section).
+
+
+
 
 ## AABB vs Point + radius
 
@@ -266,6 +260,64 @@ That's not to say one couldn't still take advantage of this system in a 3d simul
 ## Pipelining
 
 It might be possible to pipeline the process so that rebalancing and querying happen at the same time with the only downside being that bots react to their collisions one step later. To account for that the aabb's could be made slightly bigger and predict what they will hit the next step. This system could almost double the performance if the system wasnt using all its cores for each stage (rebalancing/querying), but we're talking a lot of added complexity, but probably more systems don't have that many cores.
+
+## Testing correctness
+
+Simply using rust has a big impact on testing. Because of its heavy use of static typing, many bugs are caught at compile time. This translates to less testing as there are fewer possible paths that the produced program can take. Also the fact that the api is generic over the underlying number type used is useful. This means that we can test the system using integers and we can expect it to work for floats. It is easier to test with integers since we can more easily construct specific scenarios where one number is one value more or less than another. So in this way we can expose corner cases.
+
+A good test is a test that tests with good certainty that a large portion of code is working properly.
+Maintaining tests comes at the cost of anchoring down the design of the production code in addition to having to be maintained themselves. As a result, making good abstractions between your crates and modules that have simple and well defined apis is very important. Then you can have a few simple tests to fully excersise an api and verify large amounts of code.
+
+This crate's sole purpose is to provide a method of providing collision detection that is faster than the naive method. So a good high level test would be to compare the query results from using this crate to the naive method (which is much easier to verify is correct). This one test can be performed on many different inputs of lists of bots to try to expose any corner cases. So this one test when fed with both random and specifically tailed inputs to expose corner cases, can show with a lot of certainty that the crate is satisfying the api. 
+
+The tailored inputs is important. For example, a case where two bounding boxes collide but only at the corner is an extremely unlikely case that may never present themselves in random inputs. To test this case, we have to turn to more point-directed tests with specific constructed set up input bot lists. They can still be verified in the same manner, though.
+
+## Benching
+
+Writing benches that validate every single piece of the algorithm design is a hassle although it would be nice. Ideally you dont want to rely on my word to say that, for example, using sweep and prune to find colliding pairs actually sped things up. It could be that while the algorithm is correct and fast that this particular aspect of the algorithm actually slows things down. 
+
+So I dont think writing low level benches are worth it. If you are unsure of a piece of code, you can bench the algorithm as a whole, change a piece of the algorithm, and bench again and compare results. Because at the end of the day, we already tested the correctness, and that is the most important thing. So I think this strategy, coupled with code coverage and just general reasoning of the code can supplement tons of benches to validate the innards of the algorithm.
+
+Always measure code before investing time in optimizing. As you design your program. You form in your mind ideas of what you think the bottle necks in your code are. When you actually measure your program, your hunches can be wildly off.
+
+When dealing with parallelism, benching small units can give you a warped sense of performance. Onces the units are combined, there may be more contention for work stealing. With small units, you have a false sense that the cpu's are not busy doing other things. For example, I parallalized creating the container range for each node. Benchmarks showed that it was faster. But when I benched the rebalancing as a whole, it was slower with the parallel container creation. So in this way, benching small units isnt quite as useful as testing small units is. That said, if you know that your code doesnt depend on some global resource like a threadpool, then benching small units is great.
+
+Platform dependance. Rust is a great language that strives for platform independant code. But at the end of the day, even though rust programs will behave the same on multiple platforms, their performance might be wildly different. And as soon as you start optimizing for one platform you have to wonder whether or not you are actually de-optimizing for another platform. For example, rebalancing is much slower on my android phone than querying. On my dell xps laptop, querying is the bottle neck instead. I have wondered why there is this disconnect. I think part of it is that rebalancing requires a lot of sorting, and sorting is something where it is hard to predict branches. So my laptop probably has a superior branch predictor. Another possible reason is memory writing. Rebalancing involves a lot of swapping, whereas querying does involve in any major writing to memory outside of what the user decides to do for each colliding pair. In any case, my end goal in creating this algorithm was to make the querying as fast as possible so as to get the most consistent performance regardless of how many bots were colliding.
+
+
+# Dynamic Allocation
+
+Sure dynamic allocation is "slow", but that doesn't mean you should avoid it. You should use it as a tool to speed up a program. It has a cost, but the idea is that with that allocated memory you can get more performance gains.
+
+The problem is that everybody has to buy into the system for it to work. Anybody who allocated a bunch of memory and doesn't return it because they want to avoid allocating it again is hogging that space for longer than it needs it.
+
+Dynamic allocation is fast. Dynamically allocating large vecs in one allocation is fast. Its only when you're dynamically allocting thousands of small objects does it become bad. Even then, probably the allocations are fast, but because the memory will likely be fragmented, iterating over a list of those objects could be very slow. Concepually, I have to remind myself that if you dynamically allocate a giant block, its simply reserving that area in memory. There isnt any expensive zeroing out of all that memory unless you want to do it. That's not to say the complicated algorithms the allocator has to do arn't complicated, but still relatively cheap.
+
+Often times, its not the dynamic allocation that is slow, but some other residial of doing it in the first place. For example, dynamically allocating a bunch of pointers to an array, and then sorting that list of pointers. The allocation is fast, its just that there is no cache coherency. Two pointers in your list of pointers could very easily point to memory locations that are very far apart.
+
+Writing apis that don't do dynamic allocation is tough and can be cumbursome, since you probably have to have the user give you a slice of a certain size. On the other hand this let's the user know exactly how much memory your crate needs. But users should have some faith that a dynamic allocation system is good enough for most purposes to justify a more complicated api where users have to manually manage memory. 
+
+The thing is that if you don't use dynamic allocation, and you instead reserve some giant piece of memory for use of your system, then that memory is not taken advanage of when your system is not using it. It is wasted space. If you know your system will always be using it then sure it is fine. But I can see this system being used sometimes only 30 times a second. That is a lot of inbetween time where that memory that cannot be used by anything else. So really, the idea of dynamic allocation only works is everybody buys into the system. Another option is to make your api flexible enough that you pass is a slice of "workspace" memory, so that the user can decide whether to dynamically allocate it everytime or whatever. But this complicates the api for a very small portion of users who would want to not using the standard allocator.
+
+# When inserting float based AABBs, prefer NotNaN<> over OrderedFloat<>.
+
+If you want to use this for floats, NotNaN has no overhead for comparisions, but has overhead for computation, the opposite is true for OrderedFloat.
+For querying the tree colliding pairs, since no calculations are done, just a whole lot of comparisions, prefer NotNaN<>.
+Other queries do require arithmatic, like raycast and knearest. So in those cases maybe ordered float is preferred.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # In depth algorithm overview:
