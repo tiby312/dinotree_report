@@ -35,6 +35,8 @@ The way in which the benches are graphed is also a slight lie. Only one sample i
 
 The jumps that you see in the theortical dinotree line are the points at which the trees height grows by one. It is a complete binary tree so a slight increase in the height by 1 causes a doubling of nodes so it is a drastic change. As the number of bots increases its inevitable that sometimes the tree will be too tall or too short. 
 
+//TODO check how much better sweep and kd tree are from naive and see if dintoree is exactly those two combined.
+
 ![chart](./graphs/theory/colfind_theory.png)
 ![chart](./graphs/bench/colfind_bench.png)
 
