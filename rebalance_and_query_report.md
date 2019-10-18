@@ -17,13 +17,13 @@ grow rate: the rate at which the bots grown outward from the center.
 We increase n to increase the size of the problem.
 We can increase the spiral_grow to decrease the number of bots intersecting.
 
-![chart](./graphs/theory/spiral_visualize.png)
+![chart](./graphs/spiral_visualize.png)
 
 The below chart shows how influencing the spiral_grow effects the number of bot itersections. This shows that we can influence the spiral grow to see how the performance of the tree degrades. We could influcence how many bots are colliding with changing the separation, but the relationship to the grow rate and the number of intersection pairs makes a nice smooth downward graph.
 
 It is not entirely smooth, but it is smooth enough that we can use this function to change the load on the dinotree without having to sample multiple times.
 
-![chart](./graphs/theory/spiral_data.png)
+![chart](./graphs/spiral_data.png)
 
 
 # Comparison against other Algorithms
@@ -37,8 +37,8 @@ The jumps that you see in the theortical dinotree line are the points at which t
 
 //TODO check how much better sweep and kd tree are from naive and see if dintoree is exactly those two combined.
 
-![chart](./graphs/theory/colfind_theory.png)
-![chart](./graphs/bench/colfind_bench.png)
+![chart](./graphs/colfind_theory.png)
+![chart](./graphs/colfind_bench.png)
 
 
 The below two charts shows a 3d view of the characteristics of naive, sweep and prune, and dinotree.
@@ -47,7 +47,18 @@ There are a couple of observations to make here. First, you might have noticed t
 
 Another interesting observation is that these graphs show that sweep and prune has a better worst case than the dinotree algorithm. This makes sense since in the worst case, sweep and prune willl sort all the bots, and then sweep. In the worst case for dinotree, it will first find the median, and then sort all the bots, and then sweep. So the dinotree is slower since it redundantly found the median, and then sorted everything. However, it can be easily seen that this only happens when the bots are extremely clumped up (grow<=0.003). So while sweep and prune has a better worst-cast, the worst-cast scenario is rare and the dino-tree's worst case is not much worst (median finding + sort versus just sort). 
 
-![chart](./graphs/theory/3d_colfind_num_pairs.png)
+![chart](./graphs/3d_colfind_num_pairs.png)
+
+
+# Bounds checking vs no bounds checking
+
+This shows the difference between using array indexing with and without bounds checking/unsafe.
+As you can see, the no bounds checking version is faster, but it is by a negligable ammount.
+Look at the xaxis. The difference is still only slight at 500_000 bots.
+
+![chart](./graphs/checked_vs_unchecked_binning.png)
+
+
 
 # Rebalancing vs Querying
 
@@ -60,12 +71,12 @@ Some observations:
 * The cost of querying is reduced more by parallelizing than the cost of rebalancing.
 	
 	
-![chart](./graphs/theory/construction_vs_query_grow_theory.png)
-![chart](./graphs/bench/construction_vs_query_grow_bench.png)
+![chart](./graphs/construction_vs_query_grow_theory.png)
+![chart](./graphs/construction_vs_query_grow_bench.png)
 
 
-![chart](./graphs/theory/construction_vs_query_num_theory.png)
-![chart](./graphs/bench/construction_vs_query_num_bench.png)
+![chart](./graphs/construction_vs_query_num_theory.png)
+![chart](./graphs/construction_vs_query_num_bench.png)
 
 
 # Level Comparison
@@ -77,25 +88,35 @@ Some observations:
 * The load goes from the top levels to the bottom levels as the bots spread out more.
 * The load on the first few levels is not high unless the bots are clumped up. Its acting like a sponge. The levels down the tree you go, the more even it gets.
 
-![chart](./graphs/theory/level_analysis_theory_rebal.png)
-![chart](./graphs/theory/level_analysis_theory_query.png)
+![chart](./graphs/level_analysis_theory_rebal.png)
+![chart](./graphs/level_analysis_theory_query.png)
 
-![chart](./graphs/bench/level_analysis_bench_rebal.png)
-![chart](./graphs/bench/level_analysis_bench_query.png)
+![chart](./graphs/level_analysis_bench_rebal.png)
+![chart](./graphs/level_analysis_bench_query.png)
 
 # Copy vs No Copy
 
 todo talk about
 
-![chart](./graphs/bench/copy_vs_no_copy1.png)
+![chart](./graphs/dinotree_direct_indirect_query_0.1_128_bytes.png)
 
-# Bounds checking vs no bounds checking
+![chart](./graphs/dinotree_direct_indirect_query_1_128_bytes.png)
+![chart](./graphs/dinotree_direct_indirect_query_0.1_32_bytes.png)
+![chart](./graphs/dinotree_direct_indirect_query_0.1_8_bytes.png)
+![chart](./graphs/dinotree_direct_indirect_query_0.1_256_bytes.png)
+![chart](./graphs/dinotree_direct_indirect_query_0.01_128_bytes.png)
 
-This shows the difference between using array indexing with and without bounds checking/unsafe.
-As you can see, the no bounds checking version is faster, but it is by a negligable ammount.
-Look at the xaxis. The difference is still only slight at 500_000 bots.
 
-![chart](./graphs/bench/checked_vs_unchecked_binning.png)
+
+
+![chart](./graphs/dinotree_direct_indirect_rebal_0.1_256_bytes.png)
+![chart](./graphs/dinotree_direct_indirect_rebal_1_128_bytes.png)
+![chart](./graphs/dinotree_direct_indirect_rebal_0.1_128_bytes.png)
+![chart](./graphs/dinotree_direct_indirect_rebal_0.1_8_bytes.png)
+![chart](./graphs/dinotree_direct_indirect_rebal_0.01_128_bytes.png)
+![chart](./graphs/dinotree_direct_indirect_rebal_0.1_32_bytes.png)
+
+
 
 
 # Comparison of Tree Height
@@ -103,12 +124,12 @@ Look at the xaxis. The difference is still only slight at 500_000 bots.
 The below charts show the performance of the tree when manually selecting a height other than the default one chosen.
 You can see that the theory is a downward curve, but the benching is more of a bowl. Theory would tell us to have a big enough height such that every leaf node had only one bot in it. But in the real world, this has a lot of overhead with recursive calls and memory. Instead the benching suggested a smaller height where the leaf nodes has a few bots in them.
 
-![chart](./graphs/bench/height_heuristic.png)
+![chart](./graphs/height_heuristic.png)
 
 
 The below chart compare the empirically best height against the height that our heuristic tree height function produces. 
 
-![chart](./graphs/bench/height_heuristic_vs_optimal.png)
+![chart](./graphs/height_heuristic_vs_optimal.png)
 
 
 
@@ -117,11 +138,11 @@ The below chart compare the empirically best height against the height that our 
 The below chart shows the performance of the dinotree for different levels at which to switch to sequential.
 Obviously if you choose to switch to sequential straight away, you have sequential tree performnace.
 
-![chart](./graphs/bench/parallel_height_heuristic.png)
+![chart](./graphs/parallel_height_heuristic.png)
 
 # Comparison of primitive types
 
 The below chart shows performance using different primitive types for the aabbs. Notice that once parallelism is brought in, the differences between the types is not as big. It is also interesting of how fast sequential the integer run is compared to the other sequential primitive types.
 
-![chart](./graphs/bench/float_vs_integer.png)
+![chart](./graphs/float_vs_integer.png)
 
