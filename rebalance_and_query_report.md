@@ -30,7 +30,7 @@ The way in which the benches are graphed is also a slight lie. Only one sample i
 
 The jumps that you see in the theortical dinotree line are the points at which the trees height grows by one. It is a complete binary tree so a slight increase in the height by 1 causes a doubling of nodes so it is a drastic change. As the number of bots increases its inevitable that sometimes the tree will be too tall or too short. 
 
-Its also worth noting that the different between sweep and prune and kdtree and naive is much bigger than the different between sweep and prune and kdtree and dinotree. So using these simplier algorithms gets you big gains as it is. The gains you get from using dinotree are not as pronounced, but are noticeable with more elements.
+Its also worth noting that the difference between sweep and prune and kdtree and naive is much bigger than the different between sweep and prune and kdtree and dinotree. So using these simplier algorithms gets you big gains as it is. The gains you get from using dinotree are not as pronounced, but are noticeable with more elements.
 
 ![chart](./graphs/colfind_theory.png)
 ![chart](./graphs/colfind_bench.png)
@@ -66,7 +66,7 @@ Some observations:
 * If the bots are spread out enough, the cost of querying decreases enough to cost less than the cost of rebalancing.
 * The cost of querying is reduced more by parallelizing than the cost of rebalancing.
 	
-It makes sense that querying in more 'parallelilable' than rebalancing since the calculation that you have to perform for each node before you can divide and conquer the problem is more expensive for rebalancing. For rebalancing you need to find the median and bin the bots. For querying you have to do sweep and prune. 
+It makes sense that querying in more 'parallelilable' than rebalancing since the calculation that you have to perform for each node before you can divide and conquer the problem is more expensive for rebalancing. For rebalancing you need to find the median and bin the bots. For querying you only have to do sweep and prune. 
 
 ![chart](./graphs/construction_vs_query_grow_theory.png)
 ![chart](./graphs/construction_vs_query_grow_bench.png)
@@ -79,9 +79,11 @@ It makes sense that querying in more 'parallelilable' than rebalancing since the
 The below charts show the load balance between the different levels of the tree.
 
 Some observations:
-* The cost of rebalancing the first level is the most erratic.
+* The cost of rebalancing the first level is the most erratic. 
+	I like to think of the algorithm as a sponge and the problem as water seeping through it.
+	First you you have coarse filtering, then it gets more precise.
 * The load goes from the top levels to the bottom levels as the bots spread out more.
-* The load on the first few levels is not high unless the bots are clumped up. Its acting like a sponge. The levels down the tree you go, the more even it gets.
+* The load on the first few levels is not high unless the bots are clumped up. 
 
 ![chart](./graphs/level_analysis_theory_rebal.png)
 ![chart](./graphs/level_analysis_theory_query.png)
@@ -102,16 +104,12 @@ todo talk about
 ![chart](./graphs/dinotree_direct_indirect_query_0.01_128_bytes.png)
 
 
-
-
 ![chart](./graphs/dinotree_direct_indirect_rebal_0.1_256_bytes.png)
 ![chart](./graphs/dinotree_direct_indirect_rebal_1_128_bytes.png)
 ![chart](./graphs/dinotree_direct_indirect_rebal_0.1_128_bytes.png)
 ![chart](./graphs/dinotree_direct_indirect_rebal_0.1_8_bytes.png)
 ![chart](./graphs/dinotree_direct_indirect_rebal_0.01_128_bytes.png)
 ![chart](./graphs/dinotree_direct_indirect_rebal_0.1_32_bytes.png)
-
-
 
 
 # Comparison of Tree Height
