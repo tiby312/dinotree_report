@@ -96,19 +96,19 @@ Some observations:
 Below are a bunch of diagrams that highlight differences between a couple variable:
 Whether the elements inserted into the tree are made up of:
 
-(Rect<Num>,&mut T) (Default)
-(Rect<Num>,T) (Direct)
-&mut (Rect<Num>,T) (Indirect)
+* `(Rect<Num>,&mut T)` (Default)
+* `(Rect<Num>,T)` (Direct)
+* `&mut (Rect<Num>,T)` (Indirect)
 
-We also vary the size of T (8,32,128,or 256 bytes).
-We do not bother varying the size of Num since we assume the user is using a
+We also vary the size of `T` (8,32,128,or 256 bytes).
+We do not bother varying the size of `Num` since we assume the user is using a
 'normal' sized number type like a float or an integer.
 
 There are a couple of observations to make.
 * Direct is the faster at querying, but the slowest at construction
 * Default is the best all-around.
 * Indirect isn't far behind Default.
-* Direct is greatly influenced by the size of T.
+* Direct is greatly influenced by the size of `T`.
 
 ![chart](./graphs/dinotree_direct_indirect_query_0.1_128_bytes.png)
 ![chart](./graphs/dinotree_direct_indirect_query_1_128_bytes.png)
@@ -146,10 +146,10 @@ The below chart compare the empirically best height against the height that our 
 The below chart shows the performance of the dinotree for different levels at which to switch to sequential.
 Obviously if you choose to switch to sequential straight away, you have sequential tree performnace.
 
-This shows us the rayon's join() is very good at knowing then to not run things in parallel. So much so,
+This shows us the rayon's `join()` is very good at knowing then to not run things in parallel. So much so,
 that it doesnt seem like I even need to make sure I only call join() when I probably want parallelism.
 I think the simple fact that the tree height forces the leaves to have a fairly large number of nodes is enough
-that any overhead from join() is neglibable. So maybe I should just remove this logic.
+that any overhead from `join()` is neglibable. So maybe I should just remove this logic.
 
 ![chart](./graphs/parallel_height_heuristic.png)
 
