@@ -91,12 +91,26 @@ Some observations:
 ![chart](./graphs/level_analysis_bench_rebal.png)
 ![chart](./graphs/level_analysis_bench_query.png)
 
-# Copy vs No Copy
+# Default vs Direct vs Indirect
 
-todo talk about
+Below are a bunch of diagrams that highlight differences between a couple variable:
+Whether the elements inserted into the tree are made up of:
+
+(Rect<Num>,&mut T) (Default)
+(Rect<Num>,T) (Direct)
+&mut (Rect<Num>,T) (Indirect)
+
+We also vary the size of T (8,32,128,or 256 bytes).
+We do not bother varying the size of Num since we assume the user is using a
+'normal' sized number type like a float or an integer.
+
+There are a couple of observations to make.
+* Direct is the faster at querying, but the slowest at construction
+* Default is the best all-around.
+* Indirect isn't far behind Default.
+* Direct is greatly influenced by the size of T.
 
 ![chart](./graphs/dinotree_direct_indirect_query_0.1_128_bytes.png)
-
 ![chart](./graphs/dinotree_direct_indirect_query_1_128_bytes.png)
 ![chart](./graphs/dinotree_direct_indirect_query_0.1_32_bytes.png)
 ![chart](./graphs/dinotree_direct_indirect_query_0.1_8_bytes.png)
@@ -121,6 +135,7 @@ You can see that the theory is a downward curve, but the benching is more of a b
 
 
 The below chart compare the empirically best height against the height that our heuristic tree height function produces. 
+ 
 
 ![chart](./graphs/height_heuristic_vs_optimal.png)
 
@@ -131,11 +146,18 @@ The below chart compare the empirically best height against the height that our 
 The below chart shows the performance of the dinotree for different levels at which to switch to sequential.
 Obviously if you choose to switch to sequential straight away, you have sequential tree performnace.
 
+This shows us the rayon's join() is very good at knowing then to not run things in parallel. So much so,
+that it doesnt seem like I even need to make sure I only call join() when I probably want parallelism.
+I think the simple fact that the tree height forces the leaves to have a fairly large number of nodes is enough
+that any overhead from join() is neglibable. So maybe I should just remove this logic.
+
 ![chart](./graphs/parallel_height_heuristic.png)
 
 # Comparison of primitive types
 
-The below chart shows performance using different primitive types for the aabbs. Notice that once parallelism is brought in, the differences between the types is not as big. It is also interesting of how fast sequential the integer run is compared to the other sequential primitive types.
+The below chart shows performance using different primitive types for the aabbs. Notice that once parallelism is brought in, the differences between the types is not as big. It is interesting how much faster integers are than floats. It makes me wonder
+if in some cases it might be worth while to convert all floats to integers during construction and then do everything with 
+integers.
 
 ![chart](./graphs/float_vs_integer.png)
 
