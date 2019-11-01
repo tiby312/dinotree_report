@@ -22,11 +22,19 @@ It is not entirely smooth, but it is smooth enough that we can use this function
 ![chart](./graphs/spiral_data.png)
 
 
+For a lot of the benches below, we define a particular spiral/world, abspiral(n,grow), where we pick some constants for
+the aabb size of each of the bots and the separation. So for this abspiral() all the elements have the same size aabb box. The only variables you can change are:
+
+n: the number of elements and grow
+grow: the spiral_seperation of the bots. 
+
+This just makes things simplier since for most of the benches, we can typically show trends what we want to show by only influencing these two variables, so we might as well pick constants for the other variables and imbue that in the meaning of abspiral() itself.
+
 # Comparison against other Algorithms
 
-The below chart compares different algorithms both in terms of comparisons and benches. The naive algorithm is clearly the slowest, with sweep and prune next followed by dinotree. What is interesting is that the real world bench times matches closely the theoretical number of comparisons. What this means is that the number of comparisisons performed is proportional to the real world performance of this algorithm. The lines are more smooth (and deterministic) than the benches since an everyday laptop has other things to do besides run this program. 
+The below chart compares different algorithms both in terms of comparisons and benches. The naive algorithm is clearly the slowest, with sweep and prune next followed by dinotree. What is interesting is that the real world bench times matches closely the theoretical number of comparisons. So that means that the number of comparisisons performed is proportional to the real world performance of this algorithm. The lines are more smooth (and deterministic) than the benches since an everyday laptop has more tasks to do and might also throttle itself half way through a bench.
 
-The way in which the benches are graphed is also a slight lie. Only one sample is taken for each different value of n, and the samples are taken in ascending order. This means that you can see trends in the graph where the cpu throttles, for example, and see if all happen in the same area in the graph. If more samples were taken of each n, and in a random order, this would not be apparent. But in reality this isnt that big of a deal, as long as we can clearly see a trend as n increases.
+The way in which the benches are graphed is also slightly misleading. Every graph that graphs the load over size n does so first by benching for n=1, then n=2, n=3, etc. This means that you can see trends in the graph where the cpu throttles, for example, and see if all happen in the same area in the graph. If more samples were taken of each n, and in a random order, this would not be apparent. So for these graphs the x axis is n, but its also kind of time. In reality this isnt that big of a deal, as long as we can clearly see a trend as n increases.
 
 The jumps that you see in the theortical dinotree line are the points at which the trees height grows by one. It is a complete binary tree so a slight increase in the height by 1 causes a doubling of nodes so it is a drastic change. As the number of bots increases its inevitable that sometimes the tree will be too tall or too short. 
 
@@ -38,7 +46,7 @@ Its also worth noting that the difference between sweep and prune and kdtree and
 
 The below chart shows a 3d view of the characteristics of naive, sweep and prune, and dinotree.
 
-There are a couple of observations to make here. First, you might have noticed that the naive algorithm is not completely static with respect to the spiral grow. This is because the naive implementation I used isnt 100% naive. First I check if a pair of aabb's collides in one dimension. If it doesnt collide in that dimension, I do not even check the next dimention. So because of this "short circuiting", there is a slight increase in comparisons when the bots are clumped up. If there were no short-circuiting, it would be flat all across. However, its clear from the graph that this short-circuiting optimization doesnt gain you all that much.
+There are a couple of observations to make here. First, you might have noticed that the naive algorithm is not completely static with respect to the spiral grow. This is because the naive implementation I used isnt 100% naive. First it checks if a pair of aabb's collides in one dimension. If it doesnt collide in that dimension, it does not even check the next dimention. So because of this "short circuiting", there is a slight increase in comparisons when the bots are clumped up. If there were no short-circuiting, it would be flat all across. However, its clear from the graph that this short-circuiting optimization doesnt gain you all that much.
 
 Another interesting observation is that these graphs show that sweep and prune has a better worst case than the dinotree algorithm. This makes sense since in the worst case, sweep and prune willl sort all the bots, and then sweep. In the worst case for dinotree, it will first find the median, and then sort all the bots, and then sweep. So the dinotree is slower since it redundantly found the median, and then sorted everything. However, it can be easily seen that this only happens when the bots are extremely clumped up (abspiral(grow) where grow<=0.003). So while sweep and prune has a better worst-cast, the worst-cast scenario is rare and the dino-tree's worst case is not much worst (median finding + sort versus just sort). 
 
@@ -49,7 +57,8 @@ Another interesting observation is that these graphs show that sweep and prune h
 
 This shows the difference between using array indexing with and without bounds checking / unsafe.
 As you can see, the no bounds checking version is faster, but it is by a pretty negligable ammount.
-The scale of the xaxis shows that the difference isnt really noticable until x is very big.
+The scale of the xaxis shows that the difference isnt really noticable until x is very big. That said,
+you can still notice a clear difference between the two in the graph.
 
 ![chart](./graphs/checked_vs_unchecked_binning.png)
 
