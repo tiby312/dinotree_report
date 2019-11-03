@@ -13,8 +13,6 @@ The spiral distribution takes 3 inputs:
 We increase n to increase the size of the problem.
 We can increase the spiral_grow to decrease the number of bots intersecting.
 
-![chart](./graphs/spiral_visualize.png)
-
 While those 3 variables change the the distribution of the elements, there is another variable at play.
 
 * aabb size
@@ -24,7 +22,7 @@ the same.
 
 Lets define a particular scene/distribution just so that it makes are benching simpler.
 
-Let abspiral(n,grow) be a distribution of bots where:
+Let __abspiral(n,grow)__ be a distribution of bots where:
 * n=number of bots
 * grow=spiral grow rate
 * separation=17;
@@ -37,6 +35,8 @@ The below chart shows how influencing the spiral_grow effects the number of bot 
 It is not entirely smooth, but it is smooth enough that we can use this function to change the load on the dinotree without having to sample multiple times.
 
 ![chart](./graphs/spiral_data.png)
+
+![chart](./graphs/spiral_visualize.png)
 
 
 # Comparison against other Algorithms
