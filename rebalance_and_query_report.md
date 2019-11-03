@@ -6,29 +6,38 @@ Before we can measure and compare performance of this algorithm, we have to come
 
 
 The spiral distribution takes 3 inputs: 
-n: the number of bots
-separation: the seperation between the bots as they are laid out.
-grow rate: the rate at which the bots grown outward from the center.
+* n: the number of bots
+* separation: the seperation between the bots as they are laid out.
+* grow rate: the rate at which the bots grown outward from the center.
 
 We increase n to increase the size of the problem.
 We can increase the spiral_grow to decrease the number of bots intersecting.
 
 ![chart](./graphs/spiral_visualize.png)
 
-The below chart shows how influencing the spiral_grow effects the number of bot itersections. This shows that we can influence the spiral grow to see how the performance of the tree degrades. We could influcence how many bots are colliding with changing the separation, but the relationship to the grow rate and the number of intersection pairs makes a nice smooth downward graph.
+While those 3 variables change the the distribution of the elements, there is another variable at play.
+
+* aabb size
+
+For a lot of the benching in here, we just fix the size such that every element has the same size aabb. There is still a lot of interesting data analysis to do with elements that are all different sizes, but for now we'll just analyse caes where they are all
+the same.
+
+Lets define a particular scene/distribution just so that it makes are benching simpler.
+
+Let abspiral(n,grow) be a distribution of bots where:
+* n=number of bots
+* grow=spiral grow rate
+* separation=17;
+* aabb radius=5;
+
+This just makes things simplier since for most of the benches, we can typically show trends what we want to show by only influencing these two variables, so we might as well pick constants for the other variables and imbue that in the meaning of abspiral() itself.
+
+The below chart shows how influencing the spiral_grow effects the number of bot itersections for abspiral(). This shows that we can influence the spiral grow to see how the performance of the tree degrades. We could influcence how many bots are colliding with changing the separation, but the relationship to the grow rate and the number of intersection pairs makes a nice smooth downward graph.
 
 It is not entirely smooth, but it is smooth enough that we can use this function to change the load on the dinotree without having to sample multiple times.
 
 ![chart](./graphs/spiral_data.png)
 
-
-For a lot of the benches below, we define a particular spiral/world, abspiral(n,grow), where we pick some constants for
-the aabb size of each of the bots and the separation. So for this abspiral() all the elements have the same size aabb box. The only variables you can change are:
-
-n: the number of elements and grow
-grow: the spiral_seperation of the bots. 
-
-This just makes things simplier since for most of the benches, we can typically show trends what we want to show by only influencing these two variables, so we might as well pick constants for the other variables and imbue that in the meaning of abspiral() itself.
 
 # Comparison against other Algorithms
 
