@@ -55,9 +55,10 @@ Its also worth noting that the difference between sweep and prune and kdtree and
 
 The below chart shows a 3d view of the characteristics of naive, sweep and prune, and dinotree.
 
-There are a couple of observations to make here. First, you might have noticed that the naive algorithm is not completely static with respect to the spiral grow. This is because the naive implementation I used isnt 100% naive. First it checks if a pair of aabb's collides in one dimension. If it doesnt collide in that dimension, it does not even check the next dimention. So because of this "short circuiting", there is a slight increase in comparisons when the bots are clumped up. If there were no short-circuiting, it would be flat all across. However, its clear from the graph that this short-circuiting optimization doesnt gain you all that much.
+There are a couple of observations to make here. First, you might have noticed that the naive algorithm is not completely static with respect to the spiral grow. This is because the naive implementation I used isnt 100% naive. While it does check
+every possible pair, it first checks if a pair of aabb's collides in one dimension. If it doesnt collide in that dimension, it does not even check the next dimention. So because of this "short circuiting", there is a slight increase in comparisons when the bots are clumped up. If there were no short-circuiting, it would be flat all across. However, its clear from the graph that this short-circuiting optimization doesnt gain you all that much.
 
-Another interesting observation is that these graphs show that sweep and prune has a better worst case than the dinotree algorithm. This makes sense since in the worst case, sweep and prune willl sort all the bots, and then sweep. In the worst case for dinotree, it will first find the median, and then sort all the bots, and then sweep. So the dinotree is slower since it redundantly found the median, and then sorted everything. However, it can be easily seen that this only happens when the bots are extremely clumped up (abspiral(grow) where grow<=0.003). So while sweep and prune has a better worst-cast, the worst-cast scenario is rare and the dino-tree's worst case is not much worst (median finding + sort versus just sort). 
+Another interesting observation is that these graphs show that sweep and prune has a better worst case than the dinotree algorithm. This makes sense since in the worst case, sweep and prune will sort all the bots, and then sweep. In the worst case for dinotree, it will first find the median, and then sort all the bots, and then sweep. So the dinotree is slower since it redundantly found the median, and then sorted everything. However, it can be easily seen that this only happens when the bots are extremely clumped up (abspiral(grow) where grow<=0.003). So while sweep and prune has a better worst-cast, the worst-cast scenario is rare and the dino-tree's worst case is not much worst (median finding + sort versus just sort). 
 
 ![chart](./graphs/3d_colfind_num_pairs.png)
 
@@ -121,6 +122,9 @@ Whether the elements inserted into the tree are made up of:
 We also vary the size of `T` (8,32,128,or 256 bytes).
 We do not bother varying the size of `Num` since we assume the user is using a
 'normal' sized number type like a float or an integer.
+
+We define a more specialized abspiral(), abspiral-isize() that takes an additonal
+argument which influnces the size of `T`.
 
 There are a couple of observations to make.
 * Direct is the faster at querying, but the slowest at construction
