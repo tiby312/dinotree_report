@@ -7,9 +7,9 @@ I've written this assuming the reader knows what a [kdtree](https://en.wikipedia
 
 ## (Sweep and Prune) vs (Kd Tree) vs (KdTree + Sweep and Prune)
 
-Sweep and prune is a simple AABB collision finding system, but it degenerates as there are more and more "false-positives" (objects that intersect on one axis, but not both). Kd Trees are great, but objects that can't be inserted into children are left in the parent node and those objects must be collision checked with everybody else naivley. The tree height might also end up very large to satisfy the requirement that the leaf has only one element. A better solution is to use both. 
+Sweep and prune is a simple AABB collision finding system, but it degenerates as there are more and more "false-positives" (objects that intersect on one axis, but not both). Kd Trees are great, but non-point objects that can't be inserted into children are left in the parent node and those objects must be collision checked with everybody else naivley. The tree height might also end up very large to satisfy the requirement that the leaf has only one element. A better solution is to use both. 
 
-The basic idea is that you use a tree up until a specific tree height, and then switch to sweep and prune, and then additionally use sweep and prune for elements stuck in higher up tree nodes. The sweep and prune algorithm is a good candidate to use since it uses very little memory (just a stack that can be reused as you handle decendant nodes). But the real reason why it is good is the fact that the bots that belong to a non-leaf node in a kd tree are likely to be stewn across the divider in a line. Sweep and prune degenerates when the active list that it must maintain has many bots that end up not intersecting. This isnt likely to happen for the bots that belong to a node. The bots that belong to a non leaf node are guarenteed to touch the divider. If the divider partitions bots based off their x value, then the bots that belong to that node will all have x values that are roughly close together (they must intersect divider), but they y values can be vastly different (all the bots will be scattered up and down the dividing line). So when we do sweep and prune, it is important that we sweep and prune along axis that is different from the axis along which the divider is partitioning, otherwise it will degenetate to pratically the naive algorithm.
+The basic idea is that you use a tree up until a specific tree height, and then switch to sweep and prune, and then additionally use sweep and prune for elements stuck in higher up tree nodes. The sweep and prune algorithm is a good candidate to use since it uses very little memory (just a stack that can be reused as you handle decendant nodes). But the real reason why it is good is the fact that the bots that belong to a non-leaf node in a kd tree are likely to be stewn across the divider in a line. Sweep and prune degenerates when the active list that it must maintain has many bots that end up not intersecting. This isnt likely to happen for the bots that belong to a node. The bots that belong to a node are guarenteed to touch the divider. If the divider partitions bots based off their x value, then the bots that belong to that node will all have x values that are roughly close together (they must intersect divider), but they y values can be vastly different (all the bots will be scattered up and down the dividing line). So when we do sweep and prune, it is important that we sweep and prune along axis that is different from the axis along which the divider is partitioning, otherwise it will degenetate to pratically the naive algorithm.
 
 
 ## KD tree vs Quad Tree
@@ -24,22 +24,23 @@ This means that during the query phase, the work-load will be fairly equal on bo
 
 I wanted to make a collision system that could be used in the general case and did not need to be fine-tuned. Grid based collision systems suffer from the teapot-in-a-stadium problem. They also degenerate more rapidly as objects get more clumped up. If, however, you have a system where you have strict rules with how evenly distributed objects will be among the entire space you're checking collisions against, then I think a grid system can be better. But I think these systems are few and far in between. I think in most systems, for example, its perfectly possible for all the objects to exist entirely on one half of the space being collision checked leaving the other half empty. In such a case, half of the data structure of the grid system is not being used to partition anything. 
 
-## Exploiting Temporal Locality vs Not.
+
+## Construction Cost vs Querying Cost
 
 
 If you are simulating moving elements, it might seem slow to rebuild the tree every iteration. But from benching, most of the time querying is the cause of the slowdown. Rebuilding is always a constant load, but the load of the query can vary wildly depending on how many elements are overlapping.
 
 For example, in a bench where inside of the collision call-back function I do a reasonable collision response with 80_000 bots, if there are 0.8 times (or 65_000 ) collisions or more, querying takes longer than rebuilding. For your system, it might be impossible for there to even be 0.8 * n collisions, in which case building the tree will always be the slower part. For many systems, 0.8 * n collisions can happen. For example if you were to simulate a 2d ball-pit, every ball could be touching 6 other balls (https://en.wikipedia.org/wiki/Circle_packing), and that is without soft-body physics. So in that system, there are 0.8 * n collisions. So in that case, querying is the bottle neck. With liquid or soft-body physics, the number can be every higher. up to n * n.
 
-Rebuilding the first level of the tree does take some time, but it is still just a fraction of the entire building algorithm in most cases, provided that it was able to partition almost all the bots into two planes. 
-
-The main reason against exploiting temporal locality is that adding any kind of "memory" to the tree where you save the positions of the dividers to use as good heuristic positions for next iterations will come at a cost of a possibly sub optimal tree layout which will hurt the query algorithm. Our goal is to make the query algorithm as fast as possible since that is what can dominate.
-
-The construction of the tree may seem expensive, but it is still less than the possible cost of the querying. The querying could dominate very easily depending on how many bots intersect. That is why the cost of sorting the bots in each node is worth it because our goal is to make this algorithm the fastest it possibly can be. The load of the rebalancing of the tree doesnt very as much as the load of this algorithm. 
+Rebuilding the first level of the tree does take some time, but it is still just a fraction of the entire building algorithm in some crucial cases, provided that it was able to partition almost all the bots into two planes. 
 
 Additionally, we have been assuming that once we build the tree, we are just finding all the colliding pairs of the elements. In reality, there might be many different queries we want to do on the same tree. So this is another reason we want the tree to be built to make querying as fast as possible, because we don't know how many queries the user might want to do on it. In addition to finding all colliding pairs, its quite reasonable the user might want to do some k_nearest querying, some rectangle area querying, or some raycasting.
 
-Another strategy to exploit temporal locality is by inserting looser bounding boxes into the tree and caching the results of a query for longer than one step. The upside to this is that you only have to build and query the tree every couple of iterations. There are a number of downsides, though:
+## Exploiting Temporal Locality (with loose bounding boxes)
+
+The main reason against exploiting temporal locality is that adding any kind of "memory" to the tree where you save the positions of the dividers to use as good heuristic positions for next iterations will come at a cost of a sub optimal tree layout which will hurt the query algorithm. Our goal is to make the query algorithm as fast as possible since that is what can dominate.
+
+One strategy to exploit temporal locality is by inserting looser bounding boxes into the tree and caching the results of a query for longer than one step. The upside to this is that you only have to build and query the tree every couple of iterations. There are a number of downsides, though:
 
 * Your system performance now depends on the speed of the bots. The faster your bots move, the bigger their loose bounding boxes, the slower the querying becomes. This isnt a big deal considering the ammount that a bot moves between two frames is expected to be extremely small. But still, there are some corner cases where performance would deteriorate. For example, if every bot was going so fast it would just from one end of you screen to the other between world steps. So you would also need to bound the velocity of your bots to a small value.
 
@@ -53,7 +54,7 @@ Another strategy to exploit temporal locality is by inserting looser bounding bo
 
 So in short, this system doesnt take advantage of temporal locality, but the user can still take advantage of it by inserting loose bounding boxes and then querying less frequently to amortize the cost. I didnt explore this since I need to construct the tree every iteration anyway in my android demo, because I wanted the feedback of the user moving his finger around to be imeddiate. So to find all the bots touching the finger i need the tree to be up to date every single iteration. This is because I have no way of know where the user is going to put his finger down. I cant bound it by velocity or acceleration or anything. If I were to bound the touches "velocity", it would feel more slugish i think. It would also delay the user putting a new touch down for one iteration possibly.
 
-## Enhancement (Expoiting Temporal Locality)
+## Expoiting Temporal Locality (caching medians)
 
 I would love to try the following: Instead of finding the median at every level, find an approximate median. Additionally, keep a weighted average of the medians from previous tree builds and let it degrade with time. Get an approximate median using median of medians. This would ensure worst case linear time when building one level of the tree. This would allow the rest of the algorithm to be parallelized sooner.
 
@@ -157,22 +158,19 @@ There are three main datalayouts for each of the elements in a dinotree that are
 Because the tree construction code is generic over the elements that are inserted (as long as they implement HasAabb),
 The user can easily try all three data layouts.
 
-#TODO add benching results here.
+The default layout is almost always the fastest. 
+There are a few corner cases where if T is very small, and the bots are very dense, direct is faster, but it is marginal.
 
+The default layout is good because during dinotree construction and querying we make heavy use of aabb's, but don't actually need T all that much. We only need T when we actually detect a collision, which doesnt happen that often. Most of the time we are just
+ruling out possible colliding pairs by checking their aabbs.
 
-From benching direct aabb, and indirect bot is almost always the fastest. 
-There are a few corner cases where if T is very small, and the bots are very dense, that it is slightly faster, but it is marginal.
-So don't make it general to the user.
-For this type of use, force the user with thie memory layout.
-broadphone means that there is a lot of aabb checking, and most of it is false positives.
-Sometimes bots actually touch, in which case we can afford a level of indirection since it happens relatively rarely.
-
-It is important to note that what we are trying to speed up is the collision finding. This is the potentially n^2 computation. It is worth it shifting everything around in memory if it allows us to remove one level of indirection inside of the computationally expensive n^2 computation. The main benefit that comes from removing the level of indirection is cache coherency. If we just have pointers to all the objects in the tree, Then for every collision check we do against two objects, its possible that is a cache miss. This becomes a problem for large n.
-
-If we were inserting references into the tree, then the original order of the bots is preserved during construction/destruction of the tree. However, we are inserting the actual bots to remove this layer of indirection. So when are done using the tree, we want to return the bots to the user is the same order that they were put in. This way the user can rely on indicies for other algorithms to uniquely identify a bot. To do this, during tree construction, we also build up a Vec of offsets to be used to return the bots to their original position. We keep this as a seperate data structure as it will only be used on destruction of the tree. If we were to put the offset data into the tree itself, it would be wasted space and would hurt the memory locality of the tree query algorithms. We only need to use these offsets once, during destruction. It shouldnt be the case that all querying algorithms that might be performed on the tree suffer performance for this.
+Yes the times we do need T could lead to a cache miss, but this happens infrequently enough that that is ok.
+Using the direct layout we are less likely to get a cache miss on access of T, but now the aabbs are further apart from each other
+because we have all these T's in the way. It also took us longer to put the aabb's and T's all together in one contiguous memory.
 
 One thing that is interesting to note is that if T has its aabb already inside of it, then `(Rect<isize>,&mut T)` duplicates that memory. This is still faster than `&mut (Rect<isize>,T)`, but it still feels wasteful. To get around this, you can make it so that T doesnt have the aabb inside of it, but it just has the information needed to make it. Then you can make the aabbs as you make the `(Rect<isize>,&mut T)` in memory. So for example T could have just in it the position and radius. This way you're using the very fast tree data layout of `(Rect<isize>,&mut T)`, but at the same time you don't have two copies of every objects aabb in memory. 
 
+If we were inserting references into the tree, then the original order of the bots is preserved during construction/destruction of the tree. However, for the direct layout, we are inserting the actual bots to remove this layer of indirection. So when are done using the tree, we want to return the bots to the user is the same order that they were put in. This way the user can rely on indicies for other algorithms to uniquely identify a bot. To do this, during tree construction, we also build up a Vec of offsets to be used to return the bots to their original position. We keep this as a seperate data structure as it will only be used on destruction of the tree. If we were to put the offset data into the tree itself, it would be wasted space and would hurt the memory locality of the tree query algorithms. We only need to use these offsets once, during destruction. It shouldnt be the case that all querying algorithms that might be performed on the tree suffer performance for this.
 
 
 ## Forbidding the user from violating the invariants of the tree
@@ -194,8 +192,6 @@ So that's alot of work, but now the user is physically unable to violate the inv
 we do not have a level of indirection. It is tempting
 to just let it be the user's responsibility to not violate the invariants of the tree, and that would be a fine design
 choice if it weren't for the fact that HasAabb is unsafe (See Making HasAabb an unsafe trait vs Not Section).
-
-
 
 
 ## AABB vs Point + radius
@@ -336,30 +332,6 @@ For every node we do the following:
 4. Now this node is fully set up. Recurse left and right with the bots that were binned left and right. This can be done in parallel.
 
 
-### Memory complexity during construction
-
-Below is an example showing space usage for 5 aabb objects:
-
-```text
-x=size of one user defined object (without its aabb)
-p=size of pointer to x
-r=size of one axis aligned bounding box.
-
-1) xxxxx ->user provides bots
-
-2) xxxxx prprprprpr -> user creates a bunch of (Rect<N>,&mut T)
-
-3) xxxxx prprprprpr -> the (Rect<N>,&mut T) are re-arranged to create a dinotree. 
-
-3) xxxxx prprprprpr -> dinotree goes out of scope. 
-
-4) xxxxx -> the users list of (Rect<N>,&mut T) goes out of scope.
-
-```
-So memory useage is linear. p and r are considered to be small.
-
-
-
 ## Finding all intersecting pairs
 
 Done via divide and conquer. For every node we do the following:
@@ -372,7 +344,7 @@ Done via divide and conquer. For every node we do the following:
    parallel.
 
 
-## Nbody
+## Nbody (experimental)
 
 Here we use divide and conquer.
 
