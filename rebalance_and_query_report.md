@@ -5,6 +5,7 @@ The goal of this dinotree crate is to provide efficient broadphase collision que
 Before we can measure and compare performance of this algorithm, we have to come up with a good way to test it. We often want to see how performance degrades as the size of the problem increases, but we also do not want to influence any other variables. In this way a a simple Archimedean spiral distribution of the bots is ideal. It allows us to grow the size of the problem without affecting the density of the bots. It also fills out the entire 2d space. If all the bots were dstributed along only one dimension then that would also skew our results. For example, sweep and prune will perform very well if all the bots are spaced out along the axis we are sweeping.
 
 
+
 The spiral distribution takes 3 inputs: 
 * n: the number of bots
 * separation: the seperation between the bots as they are laid out.
@@ -12,6 +13,9 @@ The spiral distribution takes 3 inputs:
 
 We increase n to increase the size of the problem.
 We can increase the spiral_grow to decrease the number of bots intersecting.
+
+![chart](./graphs/spiral_visualize.png)
+
 
 While those 3 variables change the the distribution of the elements, there is another variable at play.
 
@@ -25,8 +29,8 @@ Lets define a particular scene/distribution just so that it makes are benching s
 Let __abspiral(n,grow)__ be a distribution of bots where:
 * n=number of bots
 * grow=spiral grow rate
-* separation=17;
-* aabb radius=5;
+* separation=constant (17)
+* aabb radius=constant (5)
 
 This just makes things simplier since for most of the benches, we can typically show trends what we want to show by only influencing these two variables, so we might as well pick constants for the other variables and imbue that in the meaning of abspiral() itself.
 
@@ -36,7 +40,6 @@ It is not entirely smooth, but it is smooth enough that we can use this function
 
 ![chart](./graphs/spiral_data.png)
 
-![chart](./graphs/spiral_visualize.png)
 
 
 # Comparison against other Algorithms
