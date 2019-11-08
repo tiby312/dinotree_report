@@ -158,12 +158,9 @@ You can see that the theory is a downward curve, but the benching is more of a b
 
 ![chart](./graphs/height_heuristic.png)
 
-
 The below chart compare the empirically best height against the height that our heuristic tree height function produces. 
  
-
 ![chart](./graphs/height_heuristic_vs_optimal.png)
-
 
 
 # Comparison of Parallel Height
@@ -171,10 +168,7 @@ The below chart compare the empirically best height against the height that our 
 The below chart shows the performance of the dinotree for different levels at which to switch to sequential.
 Obviously if you choose to switch to sequential straight away, you have sequential tree performnace.
 
-This shows us the rayon's `join()` is very good at knowing then to not run things in parallel. So much so,
-that it doesnt seem like I even need to make sure I only call join() when I probably want parallelism.
-I think the simple fact that the tree height forces the leaves to have a fairly large number of nodes is enough
-that any overhead from `join()` is neglibable. So maybe I should just remove this logic.
+This was benched on a laptop with 4 physical cores. This means that if you just parallelize one level of the kdtree, you're only taking advantage of two of the 4 cores. This explains the time it took when we switched at level 8 vs 9. 
 
 ![chart](./graphs/parallel_height_heuristic.png)
 
