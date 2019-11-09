@@ -2,7 +2,7 @@
 
 Below I go over a bunch of design problems/decisions while developing this dinotree library.
 
-I've written this assuming the reader knows what a [kdtree](https://en.wikipedia.org/wiki/K-d_tree),[sweep and prune](https://en.wikipedia.org/wiki/Sweep_and_prune) ,and [quad tree](https://en.wikipedia.org/wiki/Quadtree) are. 
+I've written this assuming the reader knows rust and its basic data structures like a Vec, what a [kdtree](https://en.wikipedia.org/wiki/K-d_tree),[sweep and prune](https://en.wikipedia.org/wiki/Sweep_and_prune) ,and [quad tree](https://en.wikipedia.org/wiki/Quadtree) are. 
 
 
 ## (Sweep and Prune) vs (Kd Tree) vs (KdTree + Sweep and Prune)
@@ -22,7 +22,7 @@ This means that during the query phase, the work-load will be fairly equal on bo
 
 ## Tree space partitioning vs grid 
 
-I wanted to make a collision system that could be used in the general case and did not need to be fine-tuned. Grid based collision systems suffer from the teapot-in-a-stadium problem. They also degenerate more rapidly as objects get more clumped up. If, however, you have a system where you have strict rules with how evenly distributed objects will be among the entire space you're checking collisions against, then I think a grid system can be better. But I think these systems are few and far in between. I think in most systems, for example, its perfectly possible for all the objects to exist entirely on one half of the space being collision checked leaving the other half empty. In such a case, half of the data structure of the grid system is not being used to partition anything. 
+I wanted to make a collision system that could be used in the general case and did not need to be fine-tuned. Grid based collision systems suffer from the teapot-in-a-stadium problem. They also degenerate more rapidly as objects get more clumped up. If, however, you have a system where you have strict rules with how evenly distributed objects will be among the entire space you're checking collisions against, then I think a grid system can be better. But I think these systems are few and far in between. I think in most systems, for example, its perfectly possible for all the objects to exist entirely on one half of the space being collision checked leaving the other half empty. In such a case, half of the data structure of the grid system is not being used to partition anything. There are also difficulties in how to represent the data structure since every grid cell could have a variable number of bots in side of it. Having a Vec in each cell, for example, would hardly be efficient.
 
 
 ## Construction Cost vs Querying Cost
