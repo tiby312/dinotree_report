@@ -1,0 +1,359 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Time Analysis - dinotree_report</title>
+        
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div id="sidebar-scrollbox" class="sidebar-scrollbox">
+                <ol class="chapter"><li class="expanded "><a href="overview.html"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="expanded "><a href="ch0-analysis-method.html"><strong aria-hidden="true">2.</strong> Analysis Method</a></li><li class="expanded "><a href="ch1-dinotree-vs-other.html"><strong aria-hidden="true">3.</strong> Comparison to other Algs</a></li><li class="expanded "><a href="ch2-construction-vs-query.html"><strong aria-hidden="true">4.</strong> Construction vs Query</a></li><li class="expanded "><a href="ch3-level-analysis.html"><strong aria-hidden="true">5.</strong> Tree Level Load</a></li><li class="expanded "><a href="ch4-aabb-data-layout.html"><strong aria-hidden="true">6.</strong> AABB Data Layout</a></li><li class="expanded "><a href="ch5-tree-data-layout.html"><strong aria-hidden="true">7.</strong> Tree Data Layout</a></li><li class="expanded "><a href="ch6-choosing-optimal-height.html"><strong aria-hidden="true">8.</strong> Optimal Tree Height</a></li><li class="expanded "><a href="ch7-parallelism.html"><strong aria-hidden="true">9.</strong> Parallelism</a></li><li class="expanded "><a href="ch8-bounds-checking.html"><strong aria-hidden="true">10.</strong> Bounds Checking</a></li><li class="expanded "><a href="ch9-primitive-types.html"><strong aria-hidden="true">11.</strong> Primitive Types</a></li><li class="expanded "><a href="ch10-improvements.html"><strong aria-hidden="true">12.</strong> Improvements</a></li><li class="expanded "><a href="ch11-api-design.html"><strong aria-hidden="true">13.</strong> API Design</a></li><li class="expanded "><a href="ch12-temporal-locality.html"><strong aria-hidden="true">14.</strong> Temporal Locality</a></li><li class="expanded "><a href="ch13-statically-known-axis.html"><strong aria-hidden="true">15.</strong> Statically Known Axis</a></li><li class="expanded "><a href="ch14-algorithm-in-depth.html"><strong aria-hidden="true">16.</strong> Algorithm In-Depth</a></li><li class="expanded "><a href="ch15-time_analysis_WIP.html" class="active"><strong aria-hidden="true">17.</strong> Time Analysis</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">dinotree_report</h1>
+
+                        <div class="right-buttons">
+                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <p>Collision finding is the only one that actually takes advantage of the sorted property.</p>
+<h1><a class="header" href="#" id=""></a></h1>
+<p>let X be the random variable destrbing whether or not two bots collide.
+Becuase the two bots are indenentantly placed in the word uniformly, we can say:
+P(X)=(bot_width/dim_x)^2*(bot_height/dim_y)^2
+Because X only has the values true or false, E[X]=P(X).</p>
+<p>let Y be the random variable describing the number of bots colliding.
+So Y=X1+X2+X3..Xn where n is the number of pairs of bots.
+Or Y=X*(n choose 2) where n is the number of bots.
+Each of these events is independant, and identical to each other.
+Exploiting the linearity property of the expected value, 
+E[Y]=E[X*(n choose 2)]=(n choose 2)*E[X]</p>
+<p>What we want to find is the average number of bots colliding for a particular point
+in the 2d space (lets call this L). So we simply divide the number of bots colliding by the area.
+E[L]=E[Y]/(dim_x*dim_y)</p>
+<p>E[L]=(n choose 2)<em>E[X]/(dim_x</em>dim_y)
+E[L]=(n choose 2)<em>( (bot_width/dim_x)^2</em>(bot_height/dim_y)^2 ) /( dim_x<em>dim_y)
+Simplifying this much further is hard.
+Let as make an assumption that the word and the bots are square.
+E[L]=(n choose 2)</em>( (bot_width/dim_x)^2*(bot_width/dim_x)^2 ) /(dim_x<em>dim_x)
+E[L]=(n choose 2)</em>( (bot_width/dim_x)^4 ) /(dim_x^2)
+E[L]=(n choose 2)* bot_width^4 / dim_x^2</p>
+<p>So now if we fix any of the 3 variabes, we can calculate the third.
+Lets solve for the dim.</p>
+<p>dim_x^2=(n choose 2)* bot_width^4 /E[L]
+dim_x=sqrt((n choose 2)* bot_width^4 /E[L])</p>
+<p>Now lets sanity check.
+If we plug in:
+n=100*100.
+bot_width=1;
+E[L]=1;
+we should get 100 back.</p>
+<h1><a class="header" href="#space-and-time-complexity" id="space-and-time-complexity">Space and Time Complexity</a></h1>
+<p>I dont know what the theoretical average time compleity of this algorithm would be. The performance depends so wildly on the distribution of the position and sizes of the bots that are fed into it. And in more usecases, there would be certain patterns to the input data. For example, in most cases, I would hope that the bots are mostly not intersecting, (because presumably the user is using this system to keep the bots apart). And another presumption might be that size of the bounding boxes would tend to be small relative to the world in which all the bots live. </p>
+<p>In the average case, if you thought of all the bots as nodes, and then added edges to the nodes whose bots intersected, you'd hope that your graph was planar. This might be another way of figuring out the time complexity. The number of edges of a planar graph is bounded from above by 3<em>v-6. This is much smaller than the naive v</em>v edges of a complete graph.</p>
+<p>That said bounding it by the worst case is easy, because in the worst case every single bot is colliding with every other bot. So the worst case is that all the bots are directly ontop of each other. Then the tree nor the mark and sweep algorithm could take any adantage of the situation and it would degenerate into the naive algorithm.</p>
+<p>In the best case, all the bots live in only leaf nodes, and none of the bots intersect. Interestingly by the pigeon principle, if you have more bots than there are leaf nodes then this best case scenario isnt possible. And this is the case. We are picking the height of the tree such that every leaf node will have a specific amount of bots. We also know that every non leaf node will most likely have at least one bot in it since it was used as the median. The non leaf nodes that dont have any bots in them, must not have any because none of its children have bots either.</p>
+<h1><a class="header" href="#epsilon" id="epsilon">Epsilon</a></h1>
+<p>Before we analyze the rebalance and query algorithms, lets come up with an approximation of how often bots would intersect a divider. Lets first look at the root. If you had a bunch of bots randomly and uniformly distrubuted in a 2d space, how many of them would intersect the median divider? The answer to this depends on the sizes of the bots. If all the bots were points, then hopefully only one bot would intersect with the divider. The only case this wouldnt be true is if multiple bots had the same x position as the median bot. If we're talking about real numbers, then I think the likelyhood of two bots randomly sharing the exact same x value is next to impossible. Since we are not dealing with real numbers, its more likely. On some bounded interval, there are only so many values that a floating point can have inbetween them, and even less so for integers. But it would still be a small enough chance that we can ignore. So for the cases where the bot is a point, I think its safe to say that epsilon is around 1 for the root.</p>
+<p>As the sizes of the bots increases, epsilon would also grow. By how much I'm not sure. But thats not the real concern. We are only concerned about the complexity as n grows. We can just assume that the bot size is constant, whatever it may be. 
+For our purposes, its simpler to just think of the bots as points since it doesnt effect our n complexity.</p>
+<p>So the question is as n grows, how is episolon effected?</p>
+<p>It clearly must also grow somewhat. The more bots there are, the greater the likelyhood that any bot will have the same value as the median bot.<br />
+So we have:
+1/x + 1/x +1/x +1/x + ... =  n/x
+where x is the possible x values.</p>
+<p>probability a bot intersects median:p(bot)=d/s
+let random variable be whether or not bot touches x. So it either is or it isnt.
+It happens with probability d/s. It doesnt happen with probably 1-d/s.
+So E[X]=1<em>d/s+0</em>(1-d/s)=d/s.</p>
+<p>Expected value is additive. so E[x1+x2+..]=E[x1]+E[x2]+E[x3]...</p>
+<p>so we have: (nd)/s=expected value of each bot touching.</p>
+<p>So that is just for the root. For the other levels, I couldn't come up with a nice closed form equation. Just recursve ones that depend on the acencetors. So lets just assume that each level is just as bad as the root. In reality, each level would have less bots to consider. </p>
+<p>So we're saying that for any level, we expect  (n*d)/s to intersect the divider.</p>
+<p>Again we are assuming uniform distribution.</p>
+<p>So below algorithms are only efficient if d&lt;&lt;s. </p>
+<p>So e=(n*d)/s.  and we assume d &lt;&lt; s.</p>
+<h1><a class="header" href="#dinotree-construction-time-complexity" id="dinotree-construction-time-complexity">DinoTree construction time complexity</a></h1>
+<p>Lets looking at rebalancing. For each node, there are three steps that need to be done:
+binning process
+sort middile
+recurse left,right</p>
+<p>As you go down the tree, less time is spent binning, and more time is spent sorting.</p>
+<p>at the root, binning would have an input of N, and sorting would take e1 (the amount intersecting the divider. The hope is that this is  asmall number).
+at the second level, binning would have an input of (N-e1), and sorting would take 2*e2, so if we write this out:</p>
+<p>level1  =  1*bin(n)+sort(e)</p>
+<p>level2  =  2*(bin((n-1*e)/2)+sort(e/2))</p>
+<p>level3  =  4*(bin((n-2*e)/4)+sort(e/4)) </p>
+<p>level4  =  8*(bin((n-4*e)/8)+sort(e/8))</p>
+<p>The total running time is the sum of all of these.</p>
+<p>Sorting is done using rust's built in sorting, which has big(o) of log(n)*n like any sorting algoritm.
+So for the purposes of finding the O(n) we can replace sort(n) with log(n)*n.
+The binning process first finds the median at each level using pdqselect which has an average running time of O(n). 
+Once it finds the median, it then binns all the bots into three bins. This is also O(n).
+So for the purposes of finding the O(n) we can replace bin(n) with simply n.</p>
+<p>First lets just replace the binning:</p>
+<p>level1  =  1*n+sort(e)</p>
+<p>level2  =  2*(n-1*e)/2+sort(e/2))</p>
+<p>level3  =  4*(n-2*e)/4+sort(e/4)) </p>
+<p>level4  =  8*(n-4*e)/8+sort(e/8))</p>
+<p>Lets split them into two series. One for binning and one for sorting.</p>
+<p>complete binning running time = 1<em>n + 2</em>(n-1<em>e)/2 + 4</em>(n-2<em>e)/4 + 8</em>(n-4*e)/8 + .... </p>
+<p>= n + n-1<em>e + n-2</em>e  + n-4*e + ...</p>
+<p>= (n + n + n + n + ...) - e( 1 + 2 + 4 + 8 + ..)</p>
+<p>lets assume the tree height is h.</p>
+<p>= n<em>h - e</em>(sum(2^k,0,h))</p>
+<p>= n<em>h - e</em>(1-2^h)/-1</p>
+<p>= n<em>h - e</em>(-1 + 2^h)</p>
+<p>= n*h + e-2^h </p>
+<p>complete sorting running time = 1<em>sort(e) + 2</em>sort(e/2) + 4<em>sort(e/4) + 8</em>sort(e/8) + ...</p>
+<p>=e<em>log(e) + 2</em>(e/2)<em>log(e/2) + 4</em>(e/4)<em>log(e/4) + 8</em>(e/8)*log(e/8) + ...</p>
+<p>=e<em>log(e) + e</em>log(e/2) + e<em>log(e/4) + e</em>log(e/8) + ...</p>
+<p>=e*(log(e) + log(e/2) + log(e/4) + log(e/8) + ...)</p>
+<p>=e*(log(e) + log(e) - log(2) + log(e) - log(4) + log(e) - log(8) + ...)</p>
+<p>=e*(h*log(e) -log(2)-log(4) -log(8) - ... )</p>
+<p>=e*(h*log(e) - (log(2)+log(4)+log(8)+...)  )</p>
+<p>=e*(h<em>log(e) - (log(2</em>4*8...)     ) )</p>
+<p>=e*(h*log(e) - log(2^h))</p>
+<p>=h<em>e</em>log(e) - e*log(2^h)</p>
+<p>So complete running time is binning and sorting complete times combined</p>
+<p>(n<em>h + e-2^h) + (h</em>e<em>log(e) - h</em>e*log(2))</p>
+<p>= n<em>h + e + h</em>e<em>log(e) - 2^h - h</em>e*log(2)</p>
+<p>Notice how many terms depend on e. The hope is that e is very small to bein with. 
+The dominating term is n<em>h. We choose the height of the complete tree based off of the number of bots,
+so we can replace h with log(n) leaving n</em>log(n) for the dominating term. </p>
+<p>So assuming e is small, we running time of creating the tree is n*log(n). </p>
+<h1><a class="header" href="#dinotree-collision-pair-query-time-complexity" id="dinotree-collision-pair-query-time-complexity">DinoTree collision pair query time complexity</a></h1>
+<p>Lets make some sweeping (no pun intended) assumptions. Every node has around the same number of bots,
+and we will call it e (same as rebalancing)</p>
+<p>Level 1: from the root we have to recurse all the way down until we visit all nodes that touch the root divider.
+sweep(e)+bjsweep(e)*h
+level 2:
+sweep(e)<em>2+bjsweep(e)</em>(h-1)*2
+level 3:
+sweep(e)<em>4+bjsweep(e)</em>(h-2)*4</p>
+<p>so we have:</p>
+<p>(se+be<em>h) + 2</em>(se+be*(h-1)) + 2^2(se+be*(h-2)) + ...</p>
+<p>Lets split it into two terms</p>
+<p>(se+2<em>se+4</em>se+....)+(be<em>h  + 2</em>be*(h-1)+4*be(h-2)+..)</p>
+<p>now lets distribute:</p>
+<p>se*(2^0+2^1+2^2+2^3+...)   + be*(1h +2(h-1)+4(h-2)+8(h-3)+...)</p>
+<p>The first term is a geometric series, so is equal to:
+se*(2^h-1)
+or roughly:
+se*(2^h)</p>
+<p>The second term, is more complicated, but a geometric series can be broken off and you are left with a summation
+over ia^i. After some simplifying the second term is close to:
+be(h*2^h)</p>
+<p>I'm dropping small constants left and right since we only care about the complexity at a large scale.</p>
+<p>so we have:
+se*(2^h)+be(h*2^h)</p>
+<p>here:
+2^h(se+be*h);</p>
+<p>We want to bound it by a function that takes n as input, not h.</p>
+<p>2^(log2(n/10))<em>(se+be</em>log2(n/10))</p>
+<p>(n/10)(se+be*log2(n/10))</p>
+<p>So I think the complexity of the querying is also O(n*log2(n)), but it is clearly more expensive than rebalancing.</p>
+<p>So overall we have to functions that bound complexity:</p>
+<p>rebalance_cost=(bin(n)+sort(e))*log2(n/bots_per_node);
+query_cost=(n/bots_per_node)(sweep_sort(e)+bi_sweep(e)*log2(n/bots_per_node))</p>
+<p>The bijective sweep algorithm is less expensive than the sweep sort. The sweep sort algorithm has to check every body against every other in theslice that is passed to it. By contrast, the bi_sweep() algorithm checks two slices of bots only against each other. </p>
+<h1><a class="header" href="#space-complexity" id="space-complexity">Space Complexity</a></h1>
+<p>The space complexity, on the other hand, is much easier to figure out. 
+The height of the tree is=log2(num/10).
+The num of nodes=2^height.
+So the number of nodes as a function of bots is nodes=2^(log2(num/10))=num/10.
+So the number of nodes created is linear to the number of bots.
+So I think space complexity is O(n).</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="ch14-algorithm-in-depth.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="ch14-algorithm-in-depth.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+        
+        
+        <script type="text/javascript">
+            window.playpen_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
