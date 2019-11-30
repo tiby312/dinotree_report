@@ -14,7 +14,7 @@ In rust right now, there isn't a easy way to re-use code
 between two versions of an algorithm where one uses mutable references and one uses read-only references.
 In the rust source code, you can see they do this using macros. From rust core's slice code:
 
-```
+```ignore
 // The shared definition of the `Iter` and `IterMut` iterators
 macro_rules! iterator {
 	...

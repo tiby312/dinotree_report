@@ -43,11 +43,10 @@ There are a couple of observations to make.
 
 
 There are three main datalayouts for each of the elements in a dinotree that are interesting:
-```
-(Rect<isize>,&mut T)
-(Rect<isize>,T),
-&mut (Rect<isize>,T)
-```
+`(Rect<isize>,&mut T)`
+`(Rect<isize>,T)`
+`&mut (Rect<isize>,T)`
+
 
 Because the tree construction code is generic over the elements that are inserted (as long as they implement HasAabb),
 The user can easily try all three data layouts.
