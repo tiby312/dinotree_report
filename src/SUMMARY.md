@@ -1,5 +1,6 @@
 # Summary
 
+- [Overview](./overview.md)
 - [Analysis Method](./ch0-analysis-method.md)
 - [Comparison to other Algs](./ch1-dinotree-vs-other.md)
 - [Construction vs Query](./ch2-construction-vs-query.md)

@@ -1,4 +1,6 @@
-
+TODO talk about general usecase. 
+Different types of entities. collision checking groups of entities instead of
+collision checking all at once.
 
 ## Mutable vs Mutable + Read-Only api
 
