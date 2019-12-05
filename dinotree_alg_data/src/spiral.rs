@@ -1,11 +1,44 @@
 use crate::inner_prelude::*;
 
 pub fn handle(fb: &mut FigureBuilder) {
-    handle1(fb);
+    handle_num(fb);
+    handle_grow(fb);
     handle2(fb);
 }
 
-fn handle1(fb: &mut FigureBuilder) {
+fn handle_num(fb:&mut FigureBuilder){
+    let mut fg = fb.build("spiral_data_num");
+
+    let mut rects=Vec::new();
+    for num in 0..10000{
+        let mut scene = bot::BotSceneBuilder::new(num)
+        .build_specialized(|scene,pos| {
+            let p=pos.inner_try_into().unwrap();
+            let r=NotNan::new(scene.radius.dis()).unwrap();
+            axgeom::Rect::from_point(p,vec2same(r)).inner_try_into::<NotNan<f32>>().unwrap()
+        });
+
+        let mut tree = DinoTree::new_par(&mut scene.bots);
+        let mut num_intersection=0;
+        tree.find_collisions_mut(|_a,_b|{
+            num_intersection+=1;
+        });
+
+        rects.push((num,num_intersection));
+    }
+
+    let x = rects.iter().map(|a| a.0);
+    let y = rects.iter().map(|a| a.1);
+    fg.axes2d()
+    	.set_title("Number of Intersections with abspiral(num)", &[])
+        .lines(x, y,  &[Caption("Naive"), Color("red"), LineWidth(4.0)])
+        .set_x_label("Number of bots", &[])
+        .set_y_label("Number of Intersections", &[]);
+
+    fb.finish(fg);
+    
+}
+fn handle_grow(fb: &mut FigureBuilder) {
     let mut fg = fb.build("spiral_data");
 
     let num_bots = 10000;

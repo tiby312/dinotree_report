@@ -49,7 +49,7 @@ fn test2(scene: &mut bot::BotScene<Bot>) -> Res {
         .collect();
 
     let mut num_pairs = 0;
-    analyze::NaiveAlgs::new(&mut bb).find_collisions_sweep_mut(axgeom::XAXISS, |_a, _b| {
+    analyze::NaiveAlgs::new(&mut bb).find_collisions_sweep_mut(axgeom::XAXIS, |_a, _b| {
         num_pairs += 1;
     });
 
@@ -136,7 +136,7 @@ fn handle_spiral(fb: &mut FigureBuilder) {
         }) {
             let mut scene = bot::BotSceneBuilder::new(num_bots)
                 .with_grow(grow)
-                .build_specialized(|pos| Bot {
+                .build_specialized(|_,pos| Bot {
                     pos: pos.inner_as(),
                 });
 

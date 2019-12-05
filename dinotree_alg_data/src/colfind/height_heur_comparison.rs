@@ -74,7 +74,7 @@ fn handle_lowest(fb: &mut FigureBuilder) {
         //let mut minimum_theory = None;
         let max_height = (num_bots as f64).log2() as usize;
 
-        let mut scene = bot::BotSceneBuilder::new(num_bots).build_specialized(|pos| Bot {
+        let mut scene = bot::BotSceneBuilder::new(num_bots).build_specialized(|_,pos| Bot {
             pos: pos.inner_as(),
             num: 0,
         });
@@ -231,7 +231,7 @@ fn handle2d(fb: &mut FigureBuilder) {
 
     let mut bench_records: Vec<BenchRecord> = Vec::new();
 
-    let mut scene = bot::BotSceneBuilder::new(10_000).build_specialized(|pos| Bot {
+    let mut scene = bot::BotSceneBuilder::new(10_000).build_specialized(|_,pos| Bot {
         pos: pos.inner_as(),
         num: 0,
     });

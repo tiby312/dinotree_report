@@ -23,7 +23,7 @@ fn handle_bench_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize)
     for num_bots in (0..40_000).rev().step_by(500) {
         let mut scene = bot::BotSceneBuilder::new(num_bots)
             .with_grow(grow)
-            .build_specialized(|pos| Bot { pos, num: 0 });
+            .build_specialized(|_,pos| Bot { pos, num: 0 });
         let mut bots = &mut scene.bots;
         let prop = &scene.bot_prop;
 
@@ -63,7 +63,7 @@ fn handle_bench_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize)
             if num_bots < 20000 {
                 let instant = Instant::now();
 
-                analyze::NaiveAlgs::new(&mut bb).find_collisions_sweep_mut(axgeom::XAXISS, |mut a, mut b| {
+                analyze::NaiveAlgs::new(&mut bb).find_collisions_sweep_mut(axgeom::XAXIS, |mut a, mut b| {
                     a.inner_mut().num -= 2;
                     b.inner_mut().num -= 2;
                 });
@@ -218,7 +218,7 @@ fn handle_theory_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize
     for num_bots in (0usize..30_000).step_by(500) {
         let mut scene = bot::BotSceneBuilder::new(num_bots)
             .with_grow(grow)
-            .build_specialized(|pos| Bot { pos, num: 0 });
+            .build_specialized(|_,pos| Bot { pos, num: 0 });
 
         let mut bots = &mut scene.bots;
         let prop = &scene.bot_prop;
@@ -270,7 +270,7 @@ fn handle_theory_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize
                     datanum::from_rect(&mut counter, prop.create_bbox_nan(b.pos))
                 });
 
-                analyze::NaiveAlgs::new(&mut bb).find_collisions_sweep_mut(axgeom::XAXISS, |mut a, mut b| {
+                analyze::NaiveAlgs::new(&mut bb).find_collisions_sweep_mut(axgeom::XAXIS, |mut a, mut b| {
                     a.inner_mut().num -= 1;
                     b.inner_mut().num -= 1;
                 });

@@ -78,7 +78,7 @@ fn handle_inner_theory(num_bots: usize, grow_iter: impl Iterator<Item = f32>) ->
     for grow in grow_iter {
         let mut scene = bot::BotSceneBuilder::new(num_bots)
             .with_grow(grow)
-            .build_specialized(|pos| Bot {
+            .build_specialized(|_,pos| Bot {
                 num: 0,
                 pos: pos.inner_as(),
             });
@@ -137,7 +137,7 @@ fn handle_inner_bench(num_bots: usize, grow_iter: impl Iterator<Item = f32>) -> 
     for grow in grow_iter {
         let mut scene = bot::BotSceneBuilder::new(num_bots)
             .with_grow(grow)
-            .build_specialized(|pos| Bot {
+            .build_specialized(|_,pos| Bot {
                 num: 0,
                 pos: pos.inner_as(),
             });

@@ -61,7 +61,7 @@ pub fn handle(fb: &mut FigureBuilder) {
 
     let mut scene = bot::BotSceneBuilder::new(num_bots)
         .with_grow(0.2)
-        .build_specialized(|pos| Bot {
+        .build_specialized(|_,pos| Bot {
             pos: pos.inner_as(),
             num: 0,
         });

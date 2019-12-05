@@ -120,7 +120,7 @@ fn handle_num_bots(fb: &mut FigureBuilder, grow: f32) {
     for num_bots in (0..700_000).step_by(5000) {
         let mut scene = bot::BotSceneBuilder::new(num_bots)
             .with_grow(grow)
-            .build_specialized(|pos| Bot {
+            .build_specialized(|_,pos| Bot {
                 pos: pos.inner_as(),
                 _num: 0,
             });

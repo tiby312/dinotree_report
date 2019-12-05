@@ -16,9 +16,9 @@ pub struct TestResult {
     query: f64,
 }
 
-fn test_seq<T: HasAabb>(
+fn test_seq<T: Aabb>(
     bots: &mut [T],
-    func: impl Fn(ProtectedBBox<T>, ProtectedBBox<T>),
+    func: impl Fn(PMut<T>, PMut<T>),
 ) -> TestResult {
     let instant = Instant::now();
 
@@ -39,9 +39,9 @@ fn test_seq<T: HasAabb>(
         query: total - rebal,
     }
 }
-fn test_par<T: HasAabb + Send + Sync>(
+fn test_par<T: Aabb + Send + Sync>(
     bots: &mut [T],
-    func: impl Fn(ProtectedBBox<T>, ProtectedBBox<T>) + Send + Sync,
+    func: impl Fn(PMut<T>, PMut<T>) + Send + Sync,
 ) -> TestResult {
     let instant = Instant::now();
 
@@ -97,8 +97,8 @@ fn complete_test<T: TestTrait>(scene: &mut bot::BotScene<Bot<T>>) -> CompleteTes
             .map(|b| BBox::new(prop.create_bbox_i32(b.pos), *b))
             .collect();
 
-        let collide = |mut b: ProtectedBBox<BBox<i32, Bot<T>>>,
-                       mut c: ProtectedBBox<BBox<i32, Bot<T>>>| {
+        let collide = |mut b: PMut<BBox<i32, Bot<T>>>,
+                       mut c: PMut<BBox<i32, Bot<T>>>| {
             b.inner_mut().num += 1;
             c.inner_mut().num += 1;
         };
@@ -117,8 +117,8 @@ fn complete_test<T: TestTrait>(scene: &mut bot::BotScene<Bot<T>>) -> CompleteTes
         let mut indirect: Vec<_> = direct.iter_mut().map(|a| BBoxIndirect::new(a)).collect();
 
         let collide =
-            |mut b: ProtectedBBox<BBoxIndirect<BBox<i32, Bot<T>>>>,
-             mut c: ProtectedBBox<BBoxIndirect<BBox<i32, Bot<T>>>>| {
+            |mut b: PMut<BBoxIndirect<BBox<i32, Bot<T>>>>,
+             mut c: PMut<BBoxIndirect<BBox<i32, Bot<T>>>>| {
                 b.inner_mut().num += 1;
                 c.inner_mut().num += 1;
             };
@@ -131,8 +131,8 @@ fn complete_test<T: TestTrait>(scene: &mut bot::BotScene<Bot<T>>) -> CompleteTes
     let (default_seq, default_par) = {
         let mut default = bbox_helper::create_bbox_mut(&mut bots, |b| prop.create_bbox_i32(b.pos));
 
-        let collide = |mut b: ProtectedBBox<BBoxMut<i32, Bot<T>>>,
-                       mut c: ProtectedBBox<BBoxMut<i32, Bot<T>>>| {
+        let collide = |mut b: PMut<BBoxMut<i32, Bot<T>>>,
+                       mut c: PMut<BBoxMut<i32, Bot<T>>>| {
             b.inner_mut().num += 1;
             c.inner_mut().num += 1;
         };
@@ -218,7 +218,7 @@ fn handle_num_bots<T: TestTrait>(fb: &mut FigureBuilder, grow: f32, val: T) {
     for num_bots in (0..30_000).rev().step_by(200) {
         let mut scene = bot::BotSceneBuilder::new(num_bots)
             .with_grow(grow)
-            .build_specialized(|pos| Bot {
+            .build_specialized(|_,pos| Bot {
                 pos: pos.inner_as(),
                 num: 0,
                 _val: val.clone(),
