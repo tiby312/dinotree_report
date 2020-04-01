@@ -106,7 +106,7 @@ fn test4(scene: &mut bot::BotScene<Bot>) -> Res {
 
     let mut num_pairs = 0;
 
-    tree.find_collisions_mut(|_a, _b| {
+    tree.find_intersections_mut(|_a, _b| {
         num_pairs += 1;
     });
 

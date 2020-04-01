@@ -7,11 +7,23 @@ pub fn black_box<T>(dummy: T) -> T {
 }
 
 
-mod inner_prelude {
+pub mod bbox_helper{
+    use dinotree_alg::Num;
+    use dinotree_alg::bbox;
+    use axgeom::Rect;
+    use dinotree_alg::BBox;
 
+    pub fn create_bbox_mut<T,N:Num>(arr:&mut [T],mut func:impl FnMut(&T)->Rect<N>)->Vec<BBox<N,&mut T>>{
+        arr.iter_mut().map(|a|bbox(func(a),a)).collect()
+    }
+}
+
+
+mod inner_prelude {
+    pub use super::bbox_helper;
     pub use crate::support::*;
     pub(crate) use crate::FigureBuilder;
-    pub use dinotree_alg::prelude::*;
+    pub use dinotree_alg::*;
     pub use dinotree_alg::analyze::*;
     
     pub(crate) use duckduckgeo::bot;
@@ -22,7 +34,7 @@ mod inner_prelude {
     pub use axgeom::vec2same;
     pub use axgeom::Rect;
     pub use axgeom::Vec2;
-    pub(crate) use dists;
+    pub(crate) use duckduckgeo::dists;
     pub use gnuplot::*;
     pub use std::time::Duration;
     pub use std::time::Instant;
@@ -56,7 +68,8 @@ impl FigureBuilder {
         //fg.set_terminal("pngcairo size 640,480 enhanced font 'Veranda,10'", "");
         fg.set_terminal("svg", "");
 
-        fg.set_pre_commands("set output system(\"echo $FILE_PATH\")");
+        fg.set_pre_commands(format!("set output '{}.svg'",filename).as_str());
+        //fg.set_pre_commands("set output system(\"echo $FILE_PATH\")");
 
         //set terminal pngcairo size 350,262 enhanced font 'Verdana,10'
         self.last_file_name = Some(ss);
@@ -114,6 +127,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     //assert_eq!(args.len(),2,"First arguent needs to be gen or graph");
 
+    dbg!(&args);
     match args[1].as_ref() {
         "theory" => {
             let folder = args[2].clone();
@@ -122,14 +136,14 @@ fn main() {
             let mut fb = FigureBuilder::new(folder);
 
             run_test!(&mut fb, spiral::handle);
-            /*
+            
             run_test!(&mut fb, colfind::colfind::handle_theory);
 
             run_test!(&mut fb, colfind::construction_vs_query::handle_theory);
             run_test!(&mut fb, colfind::level_analysis::handle_theory);
             
             run_test!(&mut fb, colfind::theory_colfind_3d::handle);
-            */
+            
         }
         "bench" => {
             let folder = args[2].clone();
@@ -142,7 +156,7 @@ fn main() {
 
             //done
             run_test!(&mut fb, colfind::rebal_strat::handle);
-            run_test!(&mut fb, colfind::dinotree_direct_indirect::handle);
+            //run_test!(&mut fb, colfind::dinotree_direct_indirect::handle);
             run_test!(&mut fb, colfind::construction_vs_query::handle_bench);
             run_test!(&mut fb, colfind::colfind::handle_bench);
             run_test!(&mut fb, colfind::float_vs_integer::handle);
@@ -183,11 +197,11 @@ fn main() {
 
                         let new_path = path.path().with_extension("svg");
                         let blag = Path::new(new_path.file_name().unwrap().to_str().unwrap());
-                        let file_path = target_dir.join(blag);
+                        //let file_path = target_dir.join(blag);
                         command
                             .arg("-p")
-                            .arg(path_command)
-                            .env("FILE_PATH", file_path.to_str().unwrap());
+                            .arg(path_command);
+                            //.env("FILE_PATH", file_path.to_str().unwrap());
 
                         command.status()
                             .expect("Couldn't spawn gnuplot. Make sure it is installed and available in PATH.");
@@ -198,7 +212,7 @@ fn main() {
             println!("Finished generating graphs");
         }
         _ => {
-            println!("First argument must be gen or graph");
+            println!("Check code to see what it should be");
         }
     }
 }

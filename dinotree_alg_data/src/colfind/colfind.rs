@@ -31,6 +31,9 @@ fn handle_bench_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize)
             b.num = 0;
         }
 
+
+
+
         let mut bb = bbox_helper::create_bbox_mut(&mut bots, |b| prop.create_bbox_nan(b.pos));
 
         let c0 = {
@@ -38,9 +41,9 @@ fn handle_bench_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize)
 
             let mut tree = DinoTree::new_par(&mut bb);
 
-            tree.find_collisions_mut_par(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut_par(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             instant_to_sec(instant.elapsed())
@@ -51,9 +54,9 @@ fn handle_bench_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize)
 
             let mut tree = DinoTree::new( &mut bb);
 
-            tree.find_collisions_mut(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut(|a, b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             instant_to_sec(instant.elapsed())
@@ -63,9 +66,9 @@ fn handle_bench_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize)
             if num_bots < 20000 {
                 let instant = Instant::now();
 
-                analyze::NaiveAlgs::new(&mut bb).find_collisions_sweep_mut(axgeom::XAXIS, |mut a, mut b| {
-                    a.inner_mut().num -= 2;
-                    b.inner_mut().num -= 2;
+                analyze::NaiveAlgs::new(&mut bb).find_collisions_sweep_mut(axgeom::XAXIS, |a, b| {
+                    a.num -= 2;
+                    b.num -= 2;
                 });
 
                 for b in bb.iter() {
@@ -82,9 +85,9 @@ fn handle_bench_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize)
             if num_bots < 8000 {
                 let instant = Instant::now();
 
-                analyze::NaiveAlgs::new(&mut bb).find_collisions_mut(|mut a, mut b| {
-                    a.inner_mut().num -= 1;
-                    b.inner_mut().num -= 1;
+                analyze::NaiveAlgs::new(&mut bb).find_collisions_mut(|a,b| {
+                    a.num -= 1;
+                    b.num -= 1;
                 });
 
                 Some(instant_to_sec(instant.elapsed()))
@@ -98,9 +101,9 @@ fn handle_bench_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize)
 
             let mut tree = NotSorted::new_par(&mut bb);
 
-            tree.find_collisions_mut_par(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut_par(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             Some(instant_to_sec(instant.elapsed()))
@@ -111,9 +114,9 @@ fn handle_bench_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize)
 
             let mut tree = NotSorted::new( &mut bb);
 
-            tree.find_collisions_mut(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             Some(instant_to_sec(instant.elapsed()))
@@ -236,9 +239,9 @@ fn handle_theory_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize
 
             let mut tree = DinoTree::new(&mut bb);
 
-            tree.find_collisions_mut(|mut a, mut b| {
-                a.inner_mut().num += 2;
-                b.inner_mut().num += 2;
+            tree.find_intersections_mut(|a,b| {
+                a.num += 2;
+                b.num += 2;
             });
 
             counter.into_inner()
@@ -252,9 +255,9 @@ fn handle_theory_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize
                     datanum::from_rect(&mut counter, prop.create_bbox_nan(b.pos))
                 });
 
-                analyze::NaiveAlgs::new(&mut bb).find_collisions_mut(|mut a, mut b| {
-                    a.inner_mut().num -= 1;
-                    b.inner_mut().num -= 1;
+                analyze::NaiveAlgs::new(&mut bb).find_collisions_mut(|a,b| {
+                    a.num -= 1;
+                    b.num -= 1;
                 });
 
                 Some(counter.into_inner())
@@ -270,9 +273,9 @@ fn handle_theory_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize
                     datanum::from_rect(&mut counter, prop.create_bbox_nan(b.pos))
                 });
 
-                analyze::NaiveAlgs::new(&mut bb).find_collisions_sweep_mut(axgeom::XAXIS, |mut a, mut b| {
-                    a.inner_mut().num -= 1;
-                    b.inner_mut().num -= 1;
+                analyze::NaiveAlgs::new(&mut bb).find_collisions_sweep_mut(axgeom::XAXIS, |a,b| {
+                    a.num -= 1;
+                    b.num -= 1;
                 });
 
                 Some(counter.into_inner())
@@ -290,9 +293,9 @@ fn handle_theory_inner(grow: f32, fg: &mut Figure, title: &str, yposition: usize
 
             let mut tree = NotSorted::new( &mut bb);
 
-            tree.find_collisions_mut(|mut a, mut b| {
-                a.inner_mut().num += 2;
-                b.inner_mut().num += 2;
+            tree.find_intersections_mut(|a,b| {
+                a.num += 2;
+                b.num += 2;
             });
 
             counter.into_inner()

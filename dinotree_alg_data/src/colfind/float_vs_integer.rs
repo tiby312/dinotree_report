@@ -37,9 +37,9 @@ fn handle_bench(fg: &mut Figure) {
 
             let mut tree = DinoTree::new( &mut bb);
 
-            tree.find_collisions_mut(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             instant_to_sec(instant.elapsed())
@@ -55,9 +55,9 @@ fn handle_bench(fg: &mut Figure) {
 
             let mut tree = DinoTree::new( &mut bb);
 
-            tree.find_collisions_mut(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             instant_to_sec(instant.elapsed())
@@ -77,9 +77,9 @@ fn handle_bench(fg: &mut Figure) {
 
             let mut tree = DinoTree::new( &mut bb);
 
-            tree.find_collisions_mut(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             instant_to_sec(instant.elapsed())
@@ -99,9 +99,9 @@ fn handle_bench(fg: &mut Figure) {
 
             let mut tree = DinoTree::new_par(&mut bb);
 
-            tree.find_collisions_mut_par(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut_par(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             instant_to_sec(instant.elapsed())
@@ -118,9 +118,9 @@ fn handle_bench(fg: &mut Figure) {
 
             let mut tree = DinoTree::new_par( &mut bb);
 
-            tree.find_collisions_mut_par(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut_par(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             instant_to_sec(instant.elapsed())
@@ -137,9 +137,9 @@ fn handle_bench(fg: &mut Figure) {
 
             let mut tree = DinoTree::new_par( &mut bb);
 
-            tree.find_collisions_mut_par(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut_par(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             instant_to_sec(instant.elapsed())
@@ -159,9 +159,9 @@ fn handle_bench(fg: &mut Figure) {
 
             let mut tree = DinoTree::new(&mut bb);
 
-            tree.find_collisions_mut(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             instant_to_sec(instant.elapsed())
@@ -180,9 +180,9 @@ fn handle_bench(fg: &mut Figure) {
 
             let mut tree = DinoTree::new_par( &mut bb);
 
-            tree.find_collisions_mut_par(|mut a, mut b| {
-                a.inner_mut().num += 1;
-                b.inner_mut().num += 1;
+            tree.find_intersections_mut_par(|a,b| {
+                a.num += 1;
+                b.num += 1;
             });
 
             instant_to_sec(instant.elapsed())

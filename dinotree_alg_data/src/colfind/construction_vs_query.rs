@@ -12,8 +12,8 @@ fn theory(scene: &mut bot::BotScene<bot::Bot>) -> (usize, usize) {
 
     let a = *counter.get_inner();
 
-    tree.find_collisions_mut(|mut a, mut b| {
-        prop.collide(a.inner_mut(), b.inner_mut());
+    tree.find_intersections_mut(|a,b| {
+        prop.collide(a, b);
     });
 
     black_box(tree);
@@ -36,8 +36,8 @@ fn theory_not_sorted(scene: &mut bot::BotScene<bot::Bot>) -> (usize, usize) {
     let a = *counter.get_inner();
 
 
-    tree.find_collisions_mut(|mut a, mut b| {
-        prop.collide(a.inner_mut(), b.inner_mut());
+    tree.find_intersections_mut(|a, b| {
+        prop.collide(a, b);
     });
 
     black_box(tree);
@@ -56,8 +56,8 @@ fn bench_seq(scene: &mut bot::BotScene<bot::Bot>) -> (f64, f64) {
 
     let a = instant_to_sec(instant.elapsed());
 
-    tree.find_collisions_mut(|mut a, mut b| {
-        prop.collide(a.inner_mut(), b.inner_mut());
+    tree.find_intersections_mut(|a,b| {
+        prop.collide(a, b);
     });
 
     black_box(tree);
@@ -75,8 +75,8 @@ fn bench_par(scene: &mut bot::BotScene<bot::Bot>) -> (f64, f64) {
 
     let a = instant_to_sec(instant.elapsed());
 
-    tree.find_collisions_mut_par(|mut a, mut b| {
-        prop.collide(a.inner_mut(), b.inner_mut());
+    tree.find_intersections_mut_par(|a, b| {
+        prop.collide(a, b);
     });
 
     black_box(tree);
@@ -95,8 +95,8 @@ fn bench_not_sorted_seq(scene: &mut bot::BotScene<bot::Bot>) -> (f64, f64) {
 
     let a = instant_to_sec(instant.elapsed());
 
-    tree.find_collisions_mut(|mut a, mut b| {
-        prop.collide(a.inner_mut(), b.inner_mut());
+    tree.find_intersections_mut(|a,b| {
+        prop.collide(a, b);
     });
 
     black_box(tree);
@@ -116,8 +116,8 @@ fn bench_not_sorted_par(scene: &mut bot::BotScene<bot::Bot>) -> (f64, f64) {
 
     let a = instant_to_sec(instant.elapsed());
 
-    tree.find_collisions_mut_par(|mut a, mut b| {
-        prop.collide(a.inner_mut(), b.inner_mut());
+    tree.find_intersections_mut_par(|a,b| {
+        prop.collide(a, b);
     });
 
     black_box(tree);

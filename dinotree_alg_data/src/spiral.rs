@@ -15,12 +15,12 @@ fn handle_num(fb:&mut FigureBuilder){
         .build_specialized(|scene,pos| {
             let p=pos.inner_try_into().unwrap();
             let r=NotNan::new(scene.radius.dis()).unwrap();
-            axgeom::Rect::from_point(p,vec2same(r)).inner_try_into::<NotNan<f32>>().unwrap()
+            bbox(axgeom::Rect::from_point(p,vec2same(r)).inner_try_into::<NotNan<f32>>().unwrap(),())
         });
 
         let mut tree = DinoTree::new_par(&mut scene.bots);
         let mut num_intersection=0;
-        tree.find_collisions_mut(|_a,_b|{
+        tree.find_intersections_mut(|_a,_b|{
             num_intersection+=1;
         });
 
@@ -60,7 +60,7 @@ fn handle_grow(fb: &mut FigureBuilder) {
         let mut tree = DinoTree::new_par(&mut bb);
 
         let mut num_intersection = 0;
-        tree.find_collisions_mut(|_a, _b| {
+        tree.find_intersections_mut(|_a, _b| {
             num_intersection += 1;
         });
 

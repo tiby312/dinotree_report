@@ -17,9 +17,9 @@ pub fn handle_bench_inner(scene: &mut bot::BotScene<Bot>, height: usize) -> f64 
         .with_height(height)
         .build_seq();
 
-    tree.find_collisions_mut(|mut a, mut b| {
-        a.inner_mut().num += 2;
-        b.inner_mut().num += 2;
+    tree.find_intersections_mut(|a,b| {
+        a.num += 2;
+        b.num += 2;
     });
 
     instant_to_sec(instant.elapsed())
@@ -38,9 +38,9 @@ pub fn handle_theory_inner(scene: &mut bot::BotScene<Bot>, height: usize) -> usi
         .with_height(height)
         .build_seq();
 
-    tree.find_collisions_mut(|mut a, mut b| {
-        a.inner_mut().num += 2;
-        b.inner_mut().num += 2;
+    tree.find_intersections_mut(|a,b| {
+        a.num += 2;
+        b.num += 2;
     });
 
     counter.into_inner()
